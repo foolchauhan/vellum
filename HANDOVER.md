@@ -2,6 +2,9 @@
 
 This document preserves the current status, codebase architecture, achievements, and completed tasks for the Vellum Android project.
 
+> [!CAUTION]
+> **Session Start Rule**: Before touching any file, run `git branch --show-current`. If you are on `develop`, `main`, or `release/*` — STOP and create a feature branch first. See [AGENT.md](AGENT.md) Section 4 for full workflow.
+
 ---
 
 ## 1. Active Context & Current State
@@ -11,7 +14,12 @@ This document preserves the current status, codebase architecture, achievements,
    - SDK: `~/Library/Android/sdk`
    - Gradle wrapper: `./gradlew`
    - Device: Connected physical phone: `adb-10BFBJ1Y4G001TE-06Tqpr._adb-tls-connect._tcp`
-3. **Codebase Navigation Guide**:
+3. **Git Repository**:
+   - Remote: `git@github.com:foolchauhan/vellum.git` (SSH)
+   - Active branches: `main`, `develop`, `release/release-1.0.0`
+   - **Current working branch**: `main` *(switch to `develop` and create a feature branch before starting work)*
+   - Branch protection required on `develop` and `release/*` — all changes via PR only
+4. **Codebase Navigation Guide**:
    - [MainActivity.kt](app/src/main/java/com/example/vellum/MainActivity.kt): App entrypoint, Google Sign-in flow host.
    - [Navigation.kt](app/src/main/java/com/example/vellum/Navigation.kt): Main navigation entry provider and Google account sign-in restoration.
    - [MainScreen.kt](app/src/main/java/com/example/vellum/ui/main/MainScreen.kt): Main dashboard page shell, horizontal pager container, tab indicators, and Google Sheets manual refresh button.

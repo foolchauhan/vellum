@@ -188,3 +188,27 @@ For testing and development velocity, the app enforces a clean slate on debug in
 ### 4. Apps Script Manual Reset Utility
 A manual database reset utility `resetSpreadsheet()` is provided in the Apps Script backend for manual testing. When executed from the Apps Script editor, it drops custom sheets, resets the standard tables to empty states with schema headers, and deletes all active triggers.
 
+---
+
+## 6. Version Control & Repository
+
+### Repository
+- **GitHub**: [github.com/foolchauhan/vellum](https://github.com/foolchauhan/vellum)
+- **Remote protocol**: SSH (`git@github.com:foolchauhan/vellum.git`)
+
+### Branch Model
+
+| Branch | Purpose |
+|---|---|
+| `main` | Stable production-ready code. No direct commits. |
+| `develop` | Integration branch for completed features. No direct commits. |
+| `release/release-x.y.z` | Frozen release snapshots. No direct commits. |
+| `feature/name` | Active development — branch from `develop` |
+| `fix/name` | Bug fixes — branch from `develop` |
+| `chore/name` | Non-functional changes — branch from `develop` |
+
+### Rules
+1. **No direct commits** to `main`, `develop`, or `release/*` — enforced via GitHub Branch Protection Rules.
+2. All changes require a **Pull Request** and **approval** before merging.
+3. To move changes from `develop` into a `release/*` branch: create a branch from the release branch, merge develop into it, resolve conflicts, push, open PR.
+4. See [AGENT.md](AGENT.md) — Section 4 for the complete step-by-step workflow.
