@@ -1,0 +1,480 @@
+Initialized native services in: /Users/chetan_mac/.gradle/native
+Initialized jansi services in: /Users/chetan_mac/.gradle/native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Starting process 'Gradle build daemon'. Working directory: /Users/chetan_mac/.gradle/daemon/9.1.0 Command: /Library/Java/JavaVirtualMachines/jdk-18.0.2.1.jdk/Contents/Home/bin/java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED -Xmx2048m -Dfile.encoding=UTF-8 -Duser.country=IN -Duser.language=en -Duser.variant -cp /Users/chetan_mac/.gradle/wrapper/dists/gradle-9.1.0-bin/9agqghryom9wkf8r80qlhnts3/gradle-9.1.0/lib/gradle-daemon-main-9.1.0.jar -javaagent:/Users/chetan_mac/.gradle/wrapper/dists/gradle-9.1.0-bin/9agqghryom9wkf8r80qlhnts3/gradle-9.1.0/lib/agents/gradle-instrumentation-agent-9.1.0.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 9.1.0
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 2.389 secs.
+The client will now receive all logging from the daemon (pid: 9543). The daemon log file: /Users/chetan_mac/.gradle/daemon/9.1.0/daemon-9543.out.log
+Daemon will be stopped at the end of the build 
+Using 4 worker leases.
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/jdk-18.0.2.1.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-18.0.2.1.jdk/Contents/Home, JAVA_VERSION=18.0.2.1, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=18.0.2.1+1-1, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=18.0.2.1+1-1, VM_VENDOR=Oracle Corporation, OS_ARCH=x86_64}
+Watching the file system is configured to be enabled if available
+Now considering [/Users/chetan_mac/DoNotTouch/Antigravity/Vellum] as hierarchies to watch
+File system watching is active
+Starting Build
+Resolved plugin [id: 'org.gradle.toolchains.foojay-resolver-convention', version: '1.0.0']
+Settings evaluated using settings file '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/settings.gradle.kts'.
+Using local directory build cache for the root build (location = /Users/chetan_mac/.gradle/caches/build-cache-1, remove unused entries = after 7 days).
+Projects loaded. Root project using build file '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/build.gradle.kts'.
+Included projects: [root project 'Vellum', project ':app']
+
+> Configure project :
+Evaluating root project 'Vellum' using build file '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '9.0.1', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.3.20', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.serialization', version: '2.3.20', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.kapt', version: '2.3.20', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.3.20', apply: false]
+
+> Configure project :app
+Evaluating project ':app' using build file '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '9.0.1']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.3.20']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.serialization', version: '2.3.20']
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.3.20']
+Resolved plugin [id: 'org.jetbrains.kotlin.kapt', version: '2.3.20']
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Using default execution profile
+Build 2f1b89f8-58ce-4a04-82e1-bf95701f4545 is started
+Using Kotlin Gradle Plugin gradle813 variant
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+w: ⚠️ Deprecated 'org.jetbrains.kotlin.android' plugin usage
+The 'org.jetbrains.kotlin.android' plugin in project ':app' is no longer required for Kotlin support since AGP 9.0.
+Solution: Remove both `android.builtInKotlin=true` and `android.newDsl=false` from `gradle.properties`, then migrate to built-in Kotlin.
+See https://kotl.in/gradle/agp-built-in-kotlin for more details.
+
+All projects evaluated.
+Task path ':app:kaptDebugKotlin' matched project ':app'
+Task name matched 'kaptDebugKotlin'
+Selected primary task 'kaptDebugKotlin' from project :app
+Starting process 'command '/usr/libexec/java_home''. Working directory: /Users/chetan_mac/.gradle/daemon/9.1.0 Command: /usr/libexec/java_home -V
+Successfully started process 'command '/usr/libexec/java_home''
+Starting process 'command '/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home/bin/java''. Working directory: /Users/chetan_mac/.gradle/.tmp/tmp-jvm6644033968783536333probe Command: /Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home/bin/java''
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home, JAVA_VERSION=10.0.2, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=10.0.2+13, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=10.0.2+13, VM_VENDOR="Oracle Corporation", OS_ARCH=x86_64}
+Starting process 'command '/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home/bin/java''. Working directory: /Users/chetan_mac/.gradle/.tmp/tmp-jvm12292923642644476137probe Command: /Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home/bin/java''
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home, JAVA_VERSION=17.0.11, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=17.0.11+7-LTS-207, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=17.0.11+7-LTS-207, VM_VENDOR=Oracle Corporation, OS_ARCH=x86_64}
+Starting process 'command '/Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home/bin/java''. Working directory: /Users/chetan_mac/.gradle/.tmp/tmp-jvm10112744404361725068probe Command: /Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home/bin/java''
+Received JVM installation metadata from '/Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home': {JAVA_HOME=/Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home, JAVA_VERSION=17.0.9, JAVA_VENDOR=JetBrains s.r.o., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=17.0.9+8-b1166.2, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=17.0.9+8-b1166.2, VM_VENDOR=JetBrains s.r.o., OS_ARCH=x86_64}
+Starting process 'command '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java''. Working directory: /Users/chetan_mac/.gradle/.tmp/tmp-jvm6784786369814497981probe Command: /Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java''
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home, JAVA_VERSION=11.0.8, JAVA_VENDOR=AdoptOpenJDK, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=11.0.8+10, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=11.0.8+10, VM_VENDOR=AdoptOpenJDK, OS_ARCH=x86_64}
+Starting process 'command '/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin/java''. Working directory: /Users/chetan_mac/.gradle/.tmp/tmp-jvm13050524126179761363probe Command: /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin/java''
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/jre, JAVA_VERSION=1.8.0_282, JAVA_VENDOR=AdoptOpenJDK, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=1.8.0_282-b08, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=25.282-b08, VM_VENDOR=AdoptOpenJDK, OS_ARCH=x86_64}
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+Tasks to be executed: [task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:preBuild', task ':app:preDebugBuild', task ':app:generateDebugResources', task ':app:packageDebugResources', task ':app:processDebugNavigationResources', task ':app:parseDebugLocalResources', task ':app:generateDebugRFile', task ':app:kaptGenerateStubsDebugKotlin', task ':app:kaptDebugKotlin']
+Tasks that were excluded: []
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[included builds,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:preBuild (Thread[included builds,5,main]) started.
+:app:preBuild (Thread[included builds,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[included builds,5,main]) started.
+:app:preDebugBuild (Thread[included builds,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:generateDebugResources (Thread[included builds,5,main]) started.
+:app:generateDebugResources (Thread[included builds,5,main]) started.
+
+> Task :app:generateDebugResources UP-TO-DATE
+Build cache key for task ':app:generateDebugResources' is 0ee45c065a607b0160f21a352279478a
+Skipping task ':app:generateDebugResources' as it is up-to-date.
+Resolve mutations for :app:packageDebugResources (Thread[included builds,5,main]) started.
+:app:packageDebugResources (Thread[Execution worker,5,main]) started.
+
+> Task :app:packageDebugResources UP-TO-DATE
+Build cache key for task ':app:packageDebugResources' is 8a7c05e6950a6d944e6765afcbfa6a49
+Skipping task ':app:packageDebugResources' as it is up-to-date.
+Resolve mutations for :app:processDebugNavigationResources (Thread[included builds,5,main]) started.
+:app:processDebugNavigationResources (Thread[included builds,5,main]) started.
+
+> Task :app:processDebugNavigationResources UP-TO-DATE
+Build cache key for task ':app:processDebugNavigationResources' is 684f971ae621fa5f0fca60eef3e8aec0
+Skipping task ':app:processDebugNavigationResources' as it is up-to-date.
+Resolve mutations for :app:parseDebugLocalResources (Thread[Execution worker,5,main]) started.
+:app:parseDebugLocalResources (Thread[Execution worker,5,main]) started.
+
+> Task :app:parseDebugLocalResources UP-TO-DATE
+Build cache key for task ':app:parseDebugLocalResources' is b76ccf57940afe18a0b94c13cc465996
+Skipping task ':app:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :app:generateDebugRFile (Thread[Execution worker,5,main]) started.
+:app:generateDebugRFile (Thread[Execution worker,5,main]) started.
+
+> Task :app:generateDebugRFile UP-TO-DATE
+Build cache key for task ':app:generateDebugRFile' is 84fb71416d373865192a693803554976
+Skipping task ':app:generateDebugRFile' as it is up-to-date.
+Resolve mutations for :app:kaptGenerateStubsDebugKotlin (Thread[Execution worker,5,main]) started.
+:app:kaptGenerateStubsDebugKotlin (Thread[Execution worker,5,main]) started.
+
+> Task :app:kaptGenerateStubsDebugKotlin
+Adding -Xuse-inline-scopes-numbers Kotlin compiler flag for task :app:compileDebugAndroidTestKotlin
+Build cache key for task ':app:kaptGenerateStubsDebugKotlin' is c7273bf61b6b63be2ad4b4c3d67f56a1
+Task ':app:kaptGenerateStubsDebugKotlin' is not up-to-date because:
+  Value of input property 'compilerOptions.freeCompilerArgs' has changed for task ':app:kaptGenerateStubsDebugKotlin'
+The input changes require a full rebuild for incremental task ':app:kaptGenerateStubsDebugKotlin'.
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+Using Kotlin/JVM incremental compilation
+[KOTLIN] Kotlin compilation 'jdkHome' argument: null
+i: Options for KOTLIN DAEMON: IncrementalCompilationOptions(super=CompilationOptions(compilerMode=INCREMENTAL_COMPILER, targetPlatform=JVM, reportCategories=[0], reportSeverity=2, requestedCompilationResults=[0], kotlinScriptExtensions=[], generateCompilerRefIndex=false), sourceChanges=org.jetbrains.kotlin.buildtools.api.SourcesChanges$Unknown@79ee3a9d, classpathChanges=NotAvailableDueToMissingClasspathSnapshot, workingDir=/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/build/kotlin/kaptGenerateStubsDebugKotlin/cacheable, multiModuleICSettings=null, icFeatures=IncrementalCompilationFeatures(usePreciseJavaTracking=true, withAbiSnapshot=false, preciseCompilationResultsBackup=true, keepIncrementalCompilationCachesInMemory=true, enableUnsafeIncrementalCompilationForMultiplatform=false, enableMonotonousIncrementalCompileSetExpansion=true), outputFiles=[/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/build/tmp/kapt3/incrementalData/debug, /Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/build/tmp/kapt3/stubs/debug, /Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/build/kotlin/kaptGenerateStubsDebugKotlin/cacheable, /Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/build/kotlin/kaptGenerateStubsDebugKotlin/local-state])
+i: Finished executing kotlin compiler using DAEMON strategy
+Stored cache entry for task ':app:kaptGenerateStubsDebugKotlin' with cache key c7273bf61b6b63be2ad4b4c3d67f56a1
+Resolve mutations for :app:kaptDebugKotlin (Thread[Execution worker,5,main]) started.
+:app:kaptDebugKotlin (Thread[Execution worker,5,main]) started.
+
+> Task :app:kaptDebugKotlin
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/java', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/main/kotlin', not found
+file or directory '/Users/chetan_mac/DoNotTouch/Antigravity/Vellum/app/src/debug/kotlin', not found
+Build cache key for task ':app:kaptDebugKotlin' is 796f223261b2b04d02e03fb874318abb
+Task ':app:kaptDebugKotlin' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':app:kaptDebugKotlin'.
+Running kapt annotation processing using the Gradle Worker API
+Adding -Xuse-inline-scopes-numbers Kotlin compiler flag for task :app:compileDebugKotlin
+Using workers PROCESS isolation mode to run kapt
+Kapt worker classpath: [/Users/chetan_mac/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-annotation-processing-gradle/2.3.20/7431d389985b40f4da3d7100c0b9ce1776b9f453/kotlin-annotation-processing-gradle-2.3.20.jar, /Users/chetan_mac/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.20/ed866de74ad3d49086a27bbd75952cd186479436/kotlin-stdlib-2.3.20.jar, /Users/chetan_mac/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar]
+Starting process 'Gradle Worker Daemon 1'. Working directory: /Users/chetan_mac/.gradle/workers Command: /Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home/bin/java @/Users/chetan_mac/.gradle/.tmp/gradle-worker-classpath6721172322501700662txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=IN -Duser.language=en -Duser.variant worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Worker Daemon 1'
+Successfully started process 'Gradle Worker Daemon 1'
+Started Gradle worker daemon (1.248 secs) with fork options DaemonForkOptions{executable=/Users/chetan_mac/Library/Java/JavaVirtualMachines/jbr-17.0.9/Contents/Home/bin/java, minHeapSize=null, maxHeapSize=null, jvmArgs=[], keepAliveMode=SESSION}.
+
+This JVM does not support getting OS memory, so no OS memory status updates will be broadcast
+
+> Task :app:kaptDebugKotlin FAILED
+Build 2f1b89f8-58ce-4a04-82e1-bf95701f4545 is closed
+
+[Incubating] Problems report is available at: file:///Users/chetan_mac/DoNotTouch/Antigravity/Vellum/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kaptDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+
+* Try:
+> Run with --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:kaptDebugKotlin'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:45)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:342)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:338)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:338)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:327)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:289)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:335)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:318)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:323)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:260)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:237)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:220)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:203)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:170)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:68)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:38)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:28)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeAndStoreInCache(BuildCacheStep.java:145)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$4(BuildCacheStep.java:101)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$5(BuildCacheStep.java:101)
+	at org.gradle.internal.Try$Success.map(Try.java:170)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithCache(BuildCacheStep.java:85)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$0(BuildCacheStep.java:74)
+	at org.gradle.internal.Either$Left.fold(Either.java:116)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:64)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:35)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:62)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:40)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:76)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:45)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:136)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:38)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:297)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:47)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:34)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:64)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
+	... 29 more
+Caused by: java.lang.reflect.InvocationTargetException
+	at org.jetbrains.kotlin.gradle.internal.KaptExecution.run(KaptWithoutKotlincTask.kt:336)
+	at org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction.execute(KaptWithoutKotlincTask.kt:273)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker$1.create(AbstractClassLoaderWorker.java:54)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker$1.create(AbstractClassLoaderWorker.java:48)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker.executeInClassLoader(AbstractClassLoaderWorker.java:48)
+	at org.gradle.workers.internal.IsolatedClassloaderWorker.run(IsolatedClassloaderWorker.java:49)
+	at org.gradle.workers.internal.IsolatedClassloaderWorker.run(IsolatedClassloaderWorker.java:30)
+	at org.gradle.workers.internal.WorkerDaemonServer.run(WorkerDaemonServer.java:108)
+	at org.gradle.workers.internal.WorkerDaemonServer.run(WorkerDaemonServer.java:77)
+	at org.gradle.process.internal.worker.request.WorkerAction.lambda$run$1(WorkerAction.java:150)
+	at org.gradle.process.internal.worker.child.WorkerLogEventListener.withWorkerLoggingProtocol(WorkerLogEventListener.java:41)
+	at org.gradle.process.internal.worker.request.WorkerAction.lambda$run$2(WorkerAction.java:150)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.process.internal.worker.request.WorkerAction.run(WorkerAction.java:142)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:182)
+	at org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:164)
+	at org.gradle.internal.remote.internal.hub.MessageHub$Handler.run(MessageHub.java:414)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: java.lang.reflect.InvocationTargetException
+	at org.jetbrains.kotlin.kapt.base.AnnotationProcessingKt.doAnnotationProcessing(annotationProcessing.kt:98)
+	at org.jetbrains.kotlin.kapt.base.AnnotationProcessingKt.doAnnotationProcessing(annotationProcessing.kt:37)
+	at org.jetbrains.kotlin.kapt.base.Kapt.kapt(Kapt.kt:46)
+	... 23 more
+Caused by: com.sun.tools.javac.processing.AnnotationProcessingError: java.lang.IllegalArgumentException: Provided Metadata instance has version 2.3.0, while maximum supported version is 2.0.0. To support newer versions, update the kotlinx-metadata-jvm library.
+	... 26 more
+Caused by: java.lang.IllegalArgumentException: Provided Metadata instance has version 2.3.0, while maximum supported version is 2.0.0. To support newer versions, update the kotlinx-metadata-jvm library.
+	at androidx.room.jarjarred.kotlinx.metadata.jvm.KotlinClassMetadata$Companion.throwIfNotCompatible$kotlinx_metadata_jvm(KotlinClassMetadata.kt:609)
+	at androidx.room.jarjarred.kotlinx.metadata.jvm.KotlinClassMetadata$Companion.checkMetadataVersionForRead(KotlinClassMetadata.kt:600)
+	at androidx.room.jarjarred.kotlinx.metadata.jvm.KotlinClassMetadata$Companion.read(KotlinClassMetadata.kt:579)
+	at androidx.room.compiler.processing.javac.kotlin.KmClassContainer$Companion.createFor(KotlinClassMetadataUtils.kt:184)
+	at androidx.room.compiler.processing.javac.JavacTypeElement$kotlinMetadata$2.invoke(JavacTypeElement.kt:62)
+	at androidx.room.compiler.processing.javac.JavacTypeElement$kotlinMetadata$2.invoke(JavacTypeElement.kt:61)
+	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+	at androidx.room.compiler.processing.javac.JavacTypeElement.getKotlinMetadata(JavacTypeElement.kt:61)
+	at androidx.room.compiler.processing.javac.JavacTypeElement$superClass$2.invoke(JavacTypeElement.kt:258)
+	at androidx.room.compiler.processing.javac.JavacTypeElement$superClass$2.invoke(JavacTypeElement.kt:246)
+	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+	at androidx.room.compiler.processing.javac.JavacTypeElement.getSuperClass(JavacTypeElement.kt:246)
+	at androidx.room.compiler.processing.javac.JavacTypeElement.getSuperClass(JavacTypeElement.kt:44)
+	at androidx.room.compiler.processing.DeclarationCollectorKt$collectAllMethods$1.invokeSuspend$collectAllMethodsByName(DeclarationCollector.kt:63)
+	at androidx.room.compiler.processing.DeclarationCollectorKt$collectAllMethods$1.invokeSuspend(DeclarationCollector.kt:80)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlin.sequences.SequenceBuilderIterator.hasNext(SequenceBuilder.kt:129)
+	at androidx.room.compiler.processing.util.MemoizedSequence$CachedIterator.hasNext(MemoizedSequence.kt:41)
+	at kotlin.sequences.FilteringSequence$iterator$1.calcNext(Sequences.kt:202)
+	at kotlin.sequences.FilteringSequence$iterator$1.hasNext(Sequences.kt:227)
+	at androidx.room.processor.PojoProcessor$DefaultDelegate.onPreProcess(PojoProcessor.kt:1040)
+	at androidx.room.processor.PojoProcessor.doProcess(PojoProcessor.kt:131)
+	at androidx.room.processor.PojoProcessor.access$doProcess(PojoProcessor.kt:56)
+	at androidx.room.processor.PojoProcessor$process$1.invoke(PojoProcessor.kt:112)
+	at androidx.room.processor.PojoProcessor$process$1.invoke(PojoProcessor.kt:109)
+	at androidx.room.processor.cache.Cache$Bucket.get(Cache.kt:53)
+	at androidx.room.processor.PojoProcessor.process(PojoProcessor.kt:109)
+	at androidx.room.processor.TableEntityProcessor.doProcess(TableEntityProcessor.kt:93)
+	at androidx.room.processor.TableEntityProcessor.access$doProcess(TableEntityProcessor.kt:44)
+	at androidx.room.processor.TableEntityProcessor$process$1.invoke(TableEntityProcessor.kt:53)
+	at androidx.room.processor.TableEntityProcessor$process$1.invoke(TableEntityProcessor.kt:52)
+	at androidx.room.processor.cache.Cache$Bucket.get(Cache.kt:53)
+	at androidx.room.processor.TableEntityProcessor.process(TableEntityProcessor.kt:52)
+	at androidx.room.processor.DatabaseProcessor.processEntities(DatabaseProcessor.kt:468)
+	at androidx.room.processor.DatabaseProcessor.doProcess(DatabaseProcessor.kt:69)
+	at androidx.room.processor.DatabaseProcessor.process(DatabaseProcessor.kt:60)
+	at androidx.room.DatabaseProcessingStep$process$databases$1$1.invoke(DatabaseProcessingStep.kt:68)
+	at androidx.room.DatabaseProcessingStep$process$databases$1$1.invoke(DatabaseProcessingStep.kt:64)
+	at androidx.room.processor.Context.collectLogs(Context.kt:192)
+	at androidx.room.DatabaseProcessingStep.process(DatabaseProcessingStep.kt:64)
+	at androidx.room.compiler.processing.CommonProcessorDelegate.processRound(XBasicAnnotationProcessor.kt:130)
+	at androidx.room.compiler.processing.javac.JavacBasicAnnotationProcessor.process(JavacBasicAnnotationProcessor.kt:73)
+	at org.jetbrains.kotlin.kapt.base.incremental.IncrementalProcessor.process(incrementalProcessors.kt:88)
+	at org.jetbrains.kotlin.kapt.base.ProcessorWrapper.process(annotationProcessing.kt:217)
+	... 26 more
+
+
+BUILD FAILED in 51s
+7 actionable tasks: 2 executed, 5 up-to-date
+Watched directory hierarchies: [/Users/chetan_mac/DoNotTouch/Antigravity/Vellum]
+Stopped 1 worker daemon(s).
