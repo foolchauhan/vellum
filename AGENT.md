@@ -2,6 +2,8 @@
 
 > [!IMPORTANT]
 > **Always check the current branch before making any changes.** Never commit directly to `develop` or any `release/*` branch. All changes must go through a feature branch and a Pull Request. See Section 4 for the full workflow.
+>
+> **Branches are never deleted** — feature, fix, chore, and integration branches are kept permanently after merge for full history traceability.
 
 ## 1. Persona Definition
 
@@ -91,7 +93,7 @@ Then on GitHub:
 2. Describe what changed and why
 3. Wait for **PR approval**
 4. Merge (Squash or Merge Commit) — **never force push to develop**
-5. Delete the feature branch after merge
+5. Keep the branch — **do not delete it**
 
 ---
 
@@ -118,7 +120,7 @@ Then on GitHub:
 2. Review all diffs carefully — this is a release gate
 3. Wait for **PR approval**
 4. Merge into the release branch
-5. Delete the integration branch after merge
+5. Keep the integration branch — **do not delete it**
 
 ---
 

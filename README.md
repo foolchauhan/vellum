@@ -115,8 +115,10 @@ git checkout -b feature/my-new-feature
 ```
 
 ### Merging Back (Always via PR)
-- `feature/*` → `develop`: open a PR on GitHub, get approval, then merge
-- `develop` → `release/*`: create a new branch from the release branch, `git merge origin/develop`, resolve conflicts, push, open PR
+- `feature/*` → `develop`: open a PR on GitHub, get approval, then merge. **Keep the branch.**
+- `develop` → `release/*`: create a new branch from the release branch, `git merge origin/develop`, resolve conflicts, push, open PR. **Keep the integration branch.**
+
+> **Branches are never deleted** — all feature, fix, chore, and integration branches are retained permanently for full history traceability.
 
 See [AGENT.md](AGENT.md) — Section 4 for the full detailed workflow.
 
