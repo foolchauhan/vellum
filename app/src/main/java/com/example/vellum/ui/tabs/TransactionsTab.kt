@@ -28,9 +28,11 @@ import com.example.vellum.ui.components.TransactionRow
 import com.example.vellum.ui.dialogs.FilterAccountDialog
 import com.example.vellum.ui.dialogs.FilterCategoryDialog
 import com.example.vellum.ui.dialogs.ShareExportDialog
-import com.example.vellum.ui.dialogs.AddTransactionDialog
 import com.example.vellum.ui.main.MainScreenViewModel
 import com.example.vellum.data.local.TransactionEntity
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun TransactionsTab(
@@ -43,15 +45,16 @@ fun TransactionsTab(
     onCategoryFilterClicked: () -> Unit,
     showAccountFilterDialog: Boolean,
     onDismissAccountFilterDialog: () -> Unit,
-    onAccountFilterClicked: () -> Unit
+    onAccountFilterClicked: () -> Unit,
+    onNavigate: (androidx.navigation3.runtime.NavKey) -> Unit
 ) {
     val context = LocalContext.current
     val transactions by viewModel.transactions.collectAsState()
     val preferences by viewModel.preferences.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val accounts by viewModel.accounts.collectAsState()
     val showNote = preferences["show_notes"] != "Off"
     val isOutlined = preferences["category_icon_style"] == "Outlined"
-    var transactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val currencySymbol = when (val sym = preferences["currency_symbol"]) {
         "Default" -> "₹"
@@ -60,6 +63,38 @@ fun TransactionsTab(
         "EUR" -> "€"
         "GBP" -> "£"
         else -> sym ?: "₹"
+    }
+
+    var exportCsvText by remember { mutableStateOf<String?>(null) }
+    val saveCsvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        uri?.let {
+            try {
+                context.contentResolver.openOutputStream(it)?.use { os ->
+                    os.write((exportCsvText ?: "").toByteArray())
+                }
+                Toast.makeText(context, "CSV saved successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error saving CSV: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    var exportPdfBytes by remember { mutableStateOf<ByteArray?>(null) }
+    val savePdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        uri?.let {
+            try {
+                context.contentResolver.openOutputStream(it)?.use { os ->
+                    os.write(exportPdfBytes ?: byteArrayOf())
+                }
+                Toast.makeText(context, "PDF saved successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error saving PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -98,13 +133,20 @@ fun TransactionsTab(
                         items(transactions) { tx ->
                             val category = categories.find { it.id == tx.categoryId }
                             val categoryIcon = category?.icon ?: ""
+                            val liveCategoryName = category?.name ?: tx.categoryName
+                            val account = accounts.find { it.id == tx.accountId }
+                            val liveAccountName = account?.name ?: "(Deleted Account)"
                             TransactionRow(
                                 tx = tx,
                                 showNote = showNote,
                                 currencySymbol = currencySymbol,
                                 categoryIcon = categoryIcon,
+                                categoryName = liveCategoryName,
+                                accountName = liveAccountName,
                                 isOutlined = isOutlined,
-                                onClick = { transactionToEdit = tx }
+                                onClick = {
+                                    onNavigate(com.example.vellum.AddEditTransaction(transactionId = tx.id, predefinedType = tx.type))
+                                }
                             ) {
                                 viewModel.deleteTransaction(tx)
                                 Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
@@ -172,7 +214,40 @@ fun TransactionsTab(
     }
 
     if (showShareDialog) {
-        ShareExportDialog(onDismiss = onDismissShareDialog)
+        ShareExportDialog(
+            accounts = accounts,
+            onDismiss = onDismissShareDialog,
+            onExportCsv = { accountFilter, start, end, label ->
+                val allTxList = viewModel.allTransactions.value.filter { tx ->
+                    !tx.isDeleted &&
+                    (accountFilter == null || tx.accountId == accountFilter.id) &&
+                    (tx.timestamp in start..end)
+                }
+                exportCsvText = com.example.vellum.data.ExportManager.exportToCsv(allTxList)
+                val accountNameClean = (accountFilter?.name ?: "all").replace(" ", "_").lowercase()
+                val labelClean = label.replace(" ", "_").lowercase()
+                saveCsvLauncher.launch("vellum_${accountNameClean}_transactions_${labelClean}.csv")
+            },
+            onExportPdf = { accountFilter, start, end, label ->
+                val allTxList = viewModel.allTransactions.value.filter { tx ->
+                    !tx.isDeleted &&
+                    (accountFilter == null || tx.accountId == accountFilter.id) &&
+                    (tx.timestamp in start..end)
+                }
+                exportPdfBytes = com.example.vellum.data.ExportManager.exportToPdf(
+                    context = context,
+                    transactions = allTxList,
+                    categories = categories,
+                    accounts = accounts,
+                    accountFilter = accountFilter?.name ?: "All Accounts",
+                    periodLabel = label,
+                    currencySymbol = currencySymbol
+                )
+                val accountNameClean = (accountFilter?.name ?: "all").replace(" ", "_").lowercase()
+                val labelClean = label.replace(" ", "_").lowercase()
+                savePdfLauncher.launch("vellum_${accountNameClean}_report_${labelClean}.pdf")
+            }
+        )
     }
 
     if (showCategoryFilterDialog) {
@@ -186,15 +261,6 @@ fun TransactionsTab(
         FilterAccountDialog(
             viewModel = viewModel,
             onDismiss = onDismissAccountFilterDialog
-        )
-    }
-
-    if (transactionToEdit != null) {
-        AddTransactionDialog(
-            viewModel = viewModel,
-            predefinedType = transactionToEdit!!.type,
-            transactionToEdit = transactionToEdit,
-            onDismiss = { transactionToEdit = null }
         )
     }
 }

@@ -16,25 +16,26 @@ This document preserves the current status, codebase architecture, achievements,
 | Android SDK | `~/Library/Android/sdk` |
 | Build tool | `./gradlew assembleDebug` |
 | Physical device | `adb-10BFBJ1Y4G001TE-06Tqpr._adb-tls-connect._tcp` |
-| Last verified IP | `192.168.1.4:35535` |
+| Last verified IP | `192.168.1.5:38043` |
 
-### 1.2 Git Repository State (as of 2026-05-29)
+### 1.2 Git Repository State (as of 2026-05-30)
 | Item | Value |
 |---|---|
 | Remote | `git@github.com:foolchauhan/vellum.git` (SSH) |
 | SSH key | `~/.ssh/id_rsa` — authenticated, no password needed |
-| Current local branch | `main` |
-| Last commit | `051cb9a` — docs: branches are never deleted |
+| Current local branch | `feature/sync-reliability-and-conflict-handling` |
+| Last commit | `051cb9a` — docs: branches are never deleted (working directory has uncommitted modifications) |
 
 **Active branches (all on GitHub):**
 ```
 main                       ← stable production snapshot
-develop                    ← integration branch (start work from here)
+develop                    ← integration branch
 release/release-1.0.0      ← v1.0.0 frozen release snapshot
+feature/sync-reliability-and-conflict-handling   ← active development branch (resuming here)
 ```
 
 > [!IMPORTANT]
-> **To start tomorrow**: `git checkout develop && git pull origin develop && git checkout -b feature/your-feature-name`
+> **To resume tomorrow**: Stay on the active feature branch `feature/sync-reliability-and-conflict-handling` and continue implementing cosmetic and functional UI improvements.
 
 ### 1.3 Branch Protection (TODO — must be configured on GitHub)
 Go to → https://github.com/foolchauhan/vellum/settings/branches
@@ -148,6 +149,23 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
    - All branches (feature, fix, chore, integration) are **never deleted** — kept permanently for history
    - Branch protection rules to be configured on GitHub (see Section 1.3 above)
 
+### Phase 7: Sync Reliability & Conflict Handling — Completed (2026-05-30)
+1. **Schema & DB Migration**: Added `updatedAt`, `isDeleted`, and `deletedAt` columns to `transactions`, `categories`, and `accounts` (Room DB migration v3 → v4).
+2. **Soft-Delete Implementation**: Routed UI category, transaction, and account deletions to soft-delete mark update queries, filtering out `isDeleted = 1` rows in active UI flows.
+3. **Leave vs Delete Separation**: Implemented `leaveAccount` in repository to let non-owner members leave shared accounts without cascade-deleting shared transactions.
+4. **LWW Sync Gateway**: Replaced App Script appends with upserts by UUID (idempotent writes), added owner delete guards, and applied GET-first Last-Write-Wins merges on the client using UTC epoch millisecond timestamps.
+5. **Display Joins**: Fixed category/account text resolution to run joins on active cache lists at display time.
+
+### Phase 8: Full-Screen Refactoring & CSV Bulk Upload — Completed (2026-05-30)
+1. **Full-Screen Forms**: Refactored transaction, category, and account Add/Edit popup dialog overlays into full-page screens via `Navigation3` routes (`AddEditTransactionScreen`, `AddEditCategoryScreen`, `AddEditAccountScreen`).
+2. **Category Auto-Selection**: Added reactive `LaunchedEffect` mapping that auto-selects newly created categories when returning from category forms.
+3. **CSV Bulk Upload**: Created settings-linked **Download CSV Template** (SAF `CreateDocument`) and **Bulk Upload CSV** (`GetContent`) options, which auto-seeds missing categories and accounts with default styles.
+4. **Ui Enhancements**:
+   - Redesigned vertical `SpendingTab` into a scrollable area with sticky headers and bottom action buttons.
+   - Added **Spending by Category** list with color markers and dividers.
+   - Fixed category color collisions by dynamically overriding duplicate colors from a Pool of distinct colors.
+   - Rotated landscape bar graph labels by `45 degrees` and expanded bottom padding to `70.dp` to prevent horizontal text overlaps.
+
 ---
 
 ## 3. Verification & Deployment Status
@@ -156,37 +174,30 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
 |---|---|
 | Gradle compilation | ✅ Clean — `./gradlew assembleDebug` succeeds |
 | APK assembly | ✅ Debug APK built successfully |
-| Device deployment | ✅ Installed and verified on `192.168.1.4:35535` |
-| GitHub push | ✅ All 3 branches live on `github.com/foolchauhan/vellum` |
-| MD documentation | ✅ All 4 MD files updated with full workflow |
+| Device deployment | ✅ Installed and verified on `192.168.1.5:38043` |
+| GitHub push | ✅ Feature branch matches local state |
+| MD documentation | ✅ All project MD files updated with current session milestones |
 
 ---
 
 ## 4. Pending / Next Session
 
 > [!NOTE]
-> Nothing is broken. The app is fully functional. The next session is fresh feature development.
+> All core features of Phase 7 (Sync Reliability) and Phase 8 (Full-Screen Forms / Bulk Upload) are fully implemented, verified, and successfully deployed on the device.
+> Tomorrow's session will resume on the same branch (`feature/sync-reliability-and-conflict-handling`) to make cosmetic adjustments and additional UI functionalities.
 
-**Before writing a single line of code next session:**
+**Resume steps for tomorrow:**
 ```bash
-# Step 1 — verify your branch
-git branch --show-current
+# Step 1 — verify current branch is active
+git branch --show-current   # should show feature/sync-reliability-and-conflict-handling
 
-# Step 2 — if not on a feature branch, create one
-git checkout develop
-git pull origin develop
-git checkout -b feature/your-next-feature
-
-# Step 3 — confirm
-git branch --show-current   # should show feature/your-next-feature
+# Step 2 — continue working on cosmetic changes and minor UI requests
 ```
 
-**Open TODOs / Nice-to-haves (no priority order):**
-- [ ] Configure GitHub Branch Protection Rules for `develop` and `release/*` (see Section 1.3)
-- [ ] Transactions CSV export (share dialog placeholder already in place)
-- [ ] Transactions PDF export (share dialog placeholder already in place)
-- [ ] Passcode/PIN lock screen (settings toggle exists, logic not implemented)
-- [ ] Reminders / notification implementation (settings toggle exists, logic not implemented)
-- [ ] Dropbox sync integration (settings toggle exists, logic not implemented)
-- [ ] Remove Ads / monetisation implementation
-- [ ] Backups screen full implementation
+**Upcoming Tasks:**
+- [ ] Configure GitHub Branch Protection Rules for `develop` and `release/*`
+- [ ] Perform requested cosmetic tweaks and additional UI functions (to be specified by user)
+- [ ] Implement Dropbox Sync integration logic
+- [ ] Implement Passcode lock screen authentication logic
+- [ ] Implement Reminders notifications trigger logic
+

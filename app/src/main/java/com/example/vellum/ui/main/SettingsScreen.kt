@@ -19,6 +19,9 @@ import com.example.vellum.ui.components.HorizontalDivider
 import com.example.vellum.ui.components.ParchmentBackground
 import com.example.vellum.ui.components.getSettingsIconForName
 import com.example.vellum.ui.dialogs.SettingsSelectionDialog
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun SettingsScreen(
@@ -26,8 +29,50 @@ fun SettingsScreen(
     onBackClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val preferences by viewModel.preferences.collectAsState()
     var activeDialogOption by remember { mutableStateOf<String?>(null) }
+
+    val createTemplateLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        uri?.let {
+            try {
+                context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                    val templateText = "Date,Type,Amount,Category,Account,Note\n2026-05-30,EXPENSE,15.50,Food,Personal,Lunch at cafe\n2026-05-30,INCOME,1500.00,Salary,Personal,Monthly paycheck\n"
+                    outputStream.write(templateText.toByteArray())
+                }
+                android.widget.Toast.makeText(context, "Template saved successfully", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(context, "Error saving template: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val getContentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            try {
+                val csvText = context.contentResolver.openInputStream(it)?.use { inputStream ->
+                    inputStream.bufferedReader().use { reader -> reader.readText() }
+                }
+                if (csvText != null) {
+                    viewModel.bulkUploadTransactions(csvText) { success, failure ->
+                        android.widget.Toast.makeText(
+                            context,
+                            "Uploaded: $success success, $failure failed",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                } else {
+                    android.widget.Toast.makeText(context, "Could not read file", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     val dialogData = when(activeDialogOption) {
         "time_period" -> Pair("Time Period", listOf("Daily", "Weekly", "Monthly", "Yearly"))
@@ -210,6 +255,27 @@ fun SettingsScreen(
                         iconName = "passcode"
                     ) {
                         activeDialogOption = "passcode"
+                    }
+                }
+
+                // Advanced Options Section
+                item { SettingsSectionHeader("Advanced Options") }
+                item {
+                    SettingsRow(
+                        title = "Download CSV Template",
+                        value = "Download",
+                        iconName = "download"
+                    ) {
+                        createTemplateLauncher.launch("vellum_template.csv")
+                    }
+                }
+                item {
+                    SettingsRow(
+                        title = "Bulk Upload CSV",
+                        value = "Upload",
+                        iconName = "upload"
+                    ) {
+                        getContentLauncher.launch("*/*")
                     }
                 }
             }
