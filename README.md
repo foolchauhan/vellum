@@ -71,6 +71,14 @@ Verify compilation and compile a debug APK using:
 ./gradlew assembleDebug
 ```
 
+### Step 1b: Compile the Shareable Release APK
+To compile the optimized release APK that is signed with the debug keystore (enabling immediate installation on physical devices for friends and family without database wipe-on-startup hooks):
+```bash
+./gradlew assembleRelease
+```
+The build process automatically renames and copies the output file to the root of the project:
+`Vellum.apk`
+
 ### Step 2: List Virtual Devices
 List connected devices or active emulator profiles using:
 ```bash
