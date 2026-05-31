@@ -61,9 +61,7 @@ fun MainScreen(
     }
 
     val context = LocalContext.current
-    var showAddTransactionType by remember { mutableStateOf<String?>(null) } // "EXPENSE" or "INCOME"
-    var showAddCategoryDialog by remember { mutableStateOf(false) }
-    var showAddAccountDialog by remember { mutableStateOf(false) }
+
     var showPeriodDialog by remember { mutableStateOf(false) }
     var showSwitchAccountDialog by remember { mutableStateOf(false) }
     var showShareDialog by remember { mutableStateOf(false) }
@@ -111,10 +109,7 @@ fun MainScreen(
         }
     }
 
-    val isBlurActive = showAddTransactionType != null ||
-            showAddCategoryDialog ||
-            showAddAccountDialog ||
-            showPeriodDialog ||
+    val isBlurActive = showPeriodDialog ||
             showSwitchAccountDialog ||
             showShareDialog ||
             showCategoryFilterDialog ||
@@ -171,9 +166,9 @@ fun MainScreen(
                         if (selectedTabForTabRow != 0) {
                             IconButton(onClick = {
                                 when (selectedTabForTabRow) {
-                                    1 -> showAddTransactionType = "EXPENSE"
-                                    2 -> showAddCategoryDialog = true
-                                    3 -> showAddAccountDialog = true
+                                    1 -> onItemClick(com.example.vellum.AddEditTransaction(predefinedType = "EXPENSE"))
+                                    2 -> onItemClick(com.example.vellum.AddEditCategory(predefinedType = "EXPENSE"))
+                                    3 -> onItemClick(com.example.vellum.AddEditAccount())
                                 }
                             }) {
                                 Icon(
@@ -358,7 +353,7 @@ fun MainScreen(
                     when (page) {
                         0 -> SpendingTab(
                             viewModel = viewModel,
-                            onAddTransactionClicked = { type -> showAddTransactionType = type }
+                            onAddTransactionClicked = { type -> onItemClick(com.example.vellum.AddEditTransaction(predefinedType = type)) }
                         )
                         1 -> TransactionsTab(
                             viewModel = viewModel,
@@ -370,17 +365,16 @@ fun MainScreen(
                             onCategoryFilterClicked = { showCategoryFilterDialog = true },
                             showAccountFilterDialog = showAccountFilterDialog,
                             onDismissAccountFilterDialog = { showAccountFilterDialog = false },
-                            onAccountFilterClicked = { showAccountFilterDialog = true }
+                            onAccountFilterClicked = { showAccountFilterDialog = true },
+                            onNavigate = onItemClick
                         )
                         2 -> CategoriesTab(
                             viewModel = viewModel,
-                            showAddCategoryDialog = showAddCategoryDialog,
-                            onDismissCategoryDialog = { showAddCategoryDialog = false }
+                            onNavigate = onItemClick
                         )
                         3 -> AccountsTab(
                             viewModel = viewModel,
-                            showAddAccountDialog = showAddAccountDialog,
-                            onDismissAccountDialog = { showAddAccountDialog = false }
+                            onNavigate = onItemClick
                         )
                         4 -> SettingsScreen(
                             viewModel = viewModel,
@@ -422,14 +416,7 @@ fun MainScreen(
         }
     }
 
-    // Dialog sheets
-    showAddTransactionType?.let { type ->
-        AddTransactionDialog(
-            viewModel = viewModel,
-            predefinedType = type,
-            onDismiss = { showAddTransactionType = null }
-        )
-    }
+
 
     if (showPeriodDialog) {
         ShowSpendingDialog(

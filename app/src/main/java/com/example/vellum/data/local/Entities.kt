@@ -18,7 +18,10 @@ data class TransactionEntity(
     val note: String,
     val timestamp: Long,
     val userEmail: String? = null,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null
 )
 
 @Entity(tableName = "categories")
@@ -31,7 +34,10 @@ data class CategoryEntity(
     val isDefault: Boolean = false,
     val chartColor: String = "#4E3C30",
     val userEmail: String? = null,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null
 )
 
 @Entity(tableName = "accounts")
@@ -45,8 +51,12 @@ data class AccountEntity(
     val shareCode: String? = null,
     val ownerEmail: String? = null,
     val userEmail: String? = null,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null
 )
+
 
 @Entity(tableName = "preferences")
 @Serializable

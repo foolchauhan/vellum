@@ -17,6 +17,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -63,17 +64,56 @@ fun LandscapeReports(
 
     val totalExpense = categorySums.values.sum()
 
-    val slices = categorySums.map { (catId, amt) ->
+    val slicesRaw = categorySums.map { (catId, amt) ->
         val cat = categories.find { it.id == catId }
         val name = cat?.name ?: "Unknown"
         val colorHex = cat?.chartColor ?: "#4E3C30"
-        val color = try {
-            Color(android.graphics.Color.parseColor(colorHex))
-        } catch (e: Exception) {
-            ChalkGray
+        Triple(name, amt, colorHex)
+    }.sortedByDescending { it.second }
+
+    val slices = remember(slicesRaw) {
+        val distinctPool = listOf(
+            "#E91E63", "#FF9800", "#9C27B0", "#FFEB3B", 
+            "#E040FB", "#00BCD4", "#4CAF50", "#E57373", 
+            "#3F51B5", "#03A9F4", "#009688", "#9E9E9E",
+            "#607D8B", "#FF5722", "#795548", "#CDDC39"
+        )
+        val usedColors = mutableSetOf<String>()
+        val poolIterator = distinctPool.iterator()
+        
+        slicesRaw.map { (name, amt, colorHex) ->
+            val upperColor = colorHex.uppercase()
+            val finalColorHex = if (usedColors.contains(upperColor)) {
+                var nextColor = upperColor
+                while (poolIterator.hasNext()) {
+                    val candidate = poolIterator.next().uppercase()
+                    if (!usedColors.contains(candidate)) {
+                        nextColor = candidate
+                        break
+                    }
+                }
+                if (nextColor == upperColor) {
+                    do {
+                        val r = (100..255).random()
+                        val g = (100..255).random()
+                        val b = (100..255).random()
+                        nextColor = String.format(Locale.US, "#%02X%02X%02X", r, g, b)
+                    } while (usedColors.contains(nextColor))
+                }
+                nextColor
+            } else {
+                upperColor
+            }
+            usedColors.add(finalColorHex)
+            
+            val color = try {
+                Color(android.graphics.Color.parseColor(finalColorHex))
+            } catch (e: Exception) {
+                ChalkGray
+            }
+            PieSlice(name = name, amount = amt, color = color)
         }
-        PieSlice(name = name, amount = amt, color = color)
-    }.sortedByDescending { it.amount }
+    }
 
     val maxPage = (slices.size - 1).coerceAtLeast(0) / 5
     val visibleSlices = slices.drop(barChartPage * 5).take(5)
@@ -511,7 +551,7 @@ fun BarChartCanvas(
     val fontFamily = ParchmentFontFamily
     Canvas(modifier = modifier) {
         val chartWidth = size.width
-        val chartHeight = size.height - 40.dp.toPx()
+        val chartHeight = size.height - 70.dp.toPx()
 
         val maxAmount = slices.maxOfOrNull { it.amount } ?: 1.0
         val count = slices.size
@@ -579,13 +619,17 @@ fun BarChartCanvas(
                 )
             )
 
-            drawText(
-                textLayoutResult = nameLayoutResult,
-                topLeft = Offset(
-                    x = x + barWidth / 2 - nameLayoutResult.size.width / 2,
-                    y = chartHeight + 8.dp.toPx()
+            val labelX = x + barWidth / 2
+            val labelY = chartHeight + 8.dp.toPx()
+
+            withTransform({
+                rotate(degrees = 45f, pivot = Offset(labelX, labelY))
+            }) {
+                drawText(
+                    textLayoutResult = nameLayoutResult,
+                    topLeft = Offset(labelX, labelY)
                 )
-            )
+            }
         }
     }
 }

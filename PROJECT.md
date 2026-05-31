@@ -42,14 +42,56 @@ graph TD
 ```
 
 ### Decoupling & Sync Strategy
-The UI controls consume flow streams exposed by the `DataRepository` via ViewModels. Storage operations are local-first. When users are offline/logged out, data is saved locally inside Room DB. 
+The UI controls consume flow streams exposed by the `DataRepository` via ViewModels. Storage operations are local-first. When users are offline/logged out, data is saved locally inside Room DB.
 
 When signed in via Google and configured with a Google Sheets Web App Sync URL:
 1. Operations write locally to the Room SQLite database and mark the record's `isSynced` flag to `false`.
 2. A synchronization procedure is triggered automatically in the background (or manually via the top-bar Refresh button).
-3. The `SheetsSyncManager` POSTs all un-synchronized local changes to the Google Apps Script Web App.
+3. The `SheetsSyncManager` GETs the current sheet state first, then POSTs all un-synchronized local changes to the Google Apps Script Web App (GET-first bidirectional sync).
 4. The Web App updates the Google Sheet, merges rows from all active household participants sharing the account, and returns the merged datasets.
 5. The local cache is replaced in a single Room database transaction to prevent UI flickering.
+
+### Sync Conflict Resolution Model
+
+Merge priority order (highest wins):
+
+| Priority | Rule | Mechanism |
+|----------|------|-----------|
+| 1 | Tombstone wins over live row | `deleted_accounts` / `deleted_categories` / `deleted_transactions` preference strings |
+| 2 | Last-Write-Wins for edits | `updatedAt` timestamp field *(planned — not yet in schema)* |
+| 3 | Local-new row wins | Unsynced local UUID rows not present on sheet → POSTed |
+| 4 | Remote-new row wins | Sheet rows not present locally → inserted on GET |
+
+**Preferences**: Local always wins when set by the user. On a fresh device install, sheet values are pulled in first. Some preferences are device-local (UI), others are syncable (financial/cross-device).
+
+| Preference Key | Syncs to Sheet? | Reason |
+|---|---|---|
+| `sheets_url` | ✅ Yes | Must be identical across devices |
+| `currency_symbol` | ✅ Yes | Financial data consistency |
+| `auto_backup` | ✅ Yes | Controls server-side Apps Script trigger |
+| `budget_mode` | ✅ Yes | Financial behaviour |
+| `dark_theme` | ❌ No | Device UI preference |
+| `tabs_position` | ❌ No | Device UI preference |
+| `summary_font` | ❌ No | Device UI preference |
+
+### Shared Account Rules
+
+- Only the `ownerEmail` may **delete** a shared account.
+- Non-owners may only **leave** (removes them from the `shares` tab on the sheet; account and all its transactions remain intact for other members).
+- An account that has linked transactions is **never hard-deleted** from the sheet. It is tombstoned (`isDeleted=true`) so dangling `accountId` references in transactions resolve gracefully.
+- Before allowing an owner delete, the Apps Script checks the `shares` tab. If other members are still active, the delete is blocked and an error is returned.
+
+### Known Sync Gaps (Planned Fixes — see Section 7)
+
+| Gap | Affected File(s) | Risk |
+|-----|-----------------|------|
+| Non-owner "Leave" and owner "Delete" call the same `deleteAccount` path — no logic branching | `AddAccountDialog.kt`, `MainScreenViewModel.kt` | 🔴 High |
+| `deleteAccount` cascades and hard-deletes all linked transactions — including for non-owners leaving | `DataRepository.kt` | 🔴 High |
+| `deleted_accounts` tombstone strings are wiped by `clearLocalCache()` on sign-out | `DataRepository.kt` | 🔴 High |
+| No `updatedAt` column on any entity — edit conflicts resolved by last-sync-wins (not LWW) | `Entities.kt` | 🟡 Medium |
+| No `isDeleted` tombstone column — deletes tracked only via preference strings | `Entities.kt` | 🟡 Medium |
+| Apps Script does append (not upsert) on POST — partial sync retry creates duplicate sheet rows | `Code.gs` | 🔴 High |
+| Orphaned `accountId` in transactions shows blank/crash if account row deleted between syncs | All transaction display composables | 🟡 Medium |
 
 ---
 
@@ -212,3 +254,54 @@ A manual database reset utility `resetSpreadsheet()` is provided in the Apps Scr
 2. All changes require a **Pull Request** and **approval** before merging.
 3. To move changes from `develop` into a `release/*` branch: create a branch from the release branch, merge develop into it, resolve conflicts, push, open PR.
 4. See [AGENT.md](AGENT.md) — Section 4 for the complete step-by-step workflow.
+
+---
+
+## 7. Sync Reliability & Conflict Handling (Implemented — Phase 7)
+
+We have fully implemented the conflict resolution and sync reliability plan on the `feature/sync-reliability-and-conflict-handling` branch.
+
+### 7.1 Schema Changes — `Entities.kt` (Room DB Migration Version 3 → 4)
+* **Added columns** to `TransactionEntity`, `CategoryEntity`, and `AccountEntity`:
+  * `updatedAt` (`Long`): Last-Write-Wins (LWW) timestamp.
+  * `isDeleted` (`Boolean`): Soft-delete tombstone flag.
+  * `deletedAt` (`Long?`): Deletion timestamp.
+
+### 7.2 DAO Queries & Soft-Delete — `Daos.kt`
+* Filtered out `isDeleted = 1` rows from active UI flows.
+* Added `markDeleted` soft-delete update queries.
+* Retained raw `@Delete` calls only for cache clearing and sync replacement.
+
+### 7.3 Repository & ViewModel soft-deletes
+* Implemented `softDeleteTransaction`, `softDeleteCategory`, and `softDeleteAccount` in `DataRepository`.
+* Added `leaveAccount()` (removes local account row only, preserving linked transactions) for non-owner member departures.
+* Branched UI delete buttons in `AddEditAccountScreen` on `isOwner`: calls `deleteAccount` if owner, or `leaveSharedAccount` if non-owner member.
+
+### 7.4 Display-Time Joins
+* Transactions lists resolve category and account names dynamically at display time using live lists. Falls back to "(Deleted Account)" or the cached column as a safety net if missing.
+
+### 7.5 Idempotency and LWW Sync Gateway
+* Switched sync engine (`SheetsSyncManager.kt`) to POST `left_accounts` tombstones and perform standard GET-first LWW merges.
+* Updated `Code.gs` to perform upserts by UUID (not appends) on the sheet, making sync requests completely idempotent.
+* Implemented owner delete guards in `Code.gs` preventing account deletion if other members are still active.
+
+---
+
+## 8. Full-Screen Refactoring & CSV Bulk Upload (Implemented — Phase 8)
+
+We have refactored all popup dialog forms into dedicated full screens, added category auto-selection, and introduced settings-based CSV bulk upload.
+
+### 8.1 Full-Screen Form Architecture
+* Refactored transaction, category, and account Add/Edit popup dialogs into distinct composable screens: `AddEditTransactionScreen`, `AddEditCategoryScreen`, and `AddEditAccountScreen`.
+* Switched form routing to utilize `Navigation3` screen transitions.
+* Implemented category auto-selection when returning from category creation inside the transaction screen using a reactive `LaunchedEffect` that compares category ID listings.
+
+### 8.2 CSV Bulk Upload & Template Download
+* Added `bulkUploadTransactions(csvText)` in `DataRepository` and `MainScreenViewModel` to parse standard templates and auto-create/tag missing categories or accounts.
+* Appended an **Advanced Options** section to `SettingsScreen` with **Download CSV Template** (via SAF `CreateDocument`) and **Bulk Upload CSV** (via `GetContent`) options.
+* Defined custom Settings row icons for download/upload in `TransactionRow.kt` mapping to `ArrowDownward` and `ArrowUpward` Material vectors.
+
+### 8.3 Spending Tab breakdown & Rotated Labels
+* Restructured vertical `SpendingTab` into a scrollable container with sticky headers and action buttons. Added a **Spending by Category** list showing colored category expense breakdowns for the selected account.
+* Implemented an inline **category color collision resolver** that substitutes duplicate colors from a pool of distinct colors, ensuring active categories have unique colors on both vertical and landscape charts.
+* Increased bottom canvas padding in `BarChartCanvas` to `70.dp` and rotated category labels by `45 degrees` using `withTransform` to resolve text overlapping.
