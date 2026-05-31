@@ -93,7 +93,7 @@ object SheetsSyncManager {
         onComplete: (() -> Unit)? = null
     ) = withContext(Dispatchers.IO) {
         try {
-            // 1. Gather all current local data
+            // 1. Gather all current local data (including tombstones)
             val localTx = db.transactionDao().getAllTransactions()
             val localCats = db.categoryDao().getAllCategories()
             val localAccs = db.accountDao().getAllAccounts()
@@ -119,7 +119,10 @@ object SheetsSyncManager {
                         shareCode = o.optString("shareCode").takeIf { it.isNotEmpty() },
                         ownerEmail = o.optString("ownerEmail").takeIf { it.isNotEmpty() },
                         userEmail = o.optString("userEmail").takeIf { it.isNotEmpty() },
-                        isSynced = true
+                        isSynced = true,
+                        updatedAt = o.optLong("updatedAt", 0L),
+                        isDeleted = o.optBoolean("isDeleted", false),
+                        deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt")
                     )
                 )
             }
@@ -137,7 +140,10 @@ object SheetsSyncManager {
                         isDefault = o.optBoolean("isDefault", false),
                         chartColor = o.optString("chartColor", "#4E3C30"),
                         userEmail = o.optString("userEmail").takeIf { it.isNotEmpty() },
-                        isSynced = true
+                        isSynced = true,
+                        updatedAt = o.optLong("updatedAt", 0L),
+                        isDeleted = o.optBoolean("isDeleted", false),
+                        deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt")
                     )
                 )
             }
@@ -158,7 +164,10 @@ object SheetsSyncManager {
                         note = o.optString("note", ""),
                         timestamp = o.getLong("timestamp"),
                         userEmail = o.optString("userEmail").takeIf { it.isNotEmpty() },
-                        isSynced = true
+                        isSynced = true,
+                        updatedAt = o.optLong("updatedAt", 0L),
+                        isDeleted = o.optBoolean("isDeleted", false),
+                        deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt")
                     )
                 )
             }
@@ -175,131 +184,91 @@ object SheetsSyncManager {
                 )
             }
 
-            // Determine if the local database has any custom/offline user data
-            // (i.e. transactions, or custom accounts/categories created offline)
-            val hasOfflineData = localTx.isNotEmpty() || 
-                                 localAccs.any { it.id != "default_account_personal" } ||
-                                 localCats.any { !it.isDefault }
+            // 1. Resolve left accounts first
+            val leftAccountsStr = db.preferenceDao().getPreferenceValue("left_accounts") ?: ""
+            val leftAccountsSet = if (leftAccountsStr.isEmpty()) emptySet() else leftAccountsStr.split(",").toSet()
 
-            val finalAccs = mutableListOf<AccountEntity>()
-            val finalCats = mutableListOf<CategoryEntity>()
-            val finalTx = mutableListOf<TransactionEntity>()
+            // 2. Perform LWW Merge
+            
+            // Merge Accounts
+            val mergedAccs = mutableMapOf<String, AccountEntity>()
+            remoteAccs.forEach { mergedAccs[it.id] = it }
+            localAccs.forEach { local ->
+                val remote = mergedAccs[local.id]
+                if (remote != null) {
+                    if (local.updatedAt >= remote.updatedAt) {
+                        val isSame = local.name == remote.name &&
+                                     local.icon == remote.icon &&
+                                     local.color == remote.color &&
+                                     local.isDeleted == remote.isDeleted &&
+                                     local.updatedAt == remote.updatedAt
+                        mergedAccs[local.id] = local.copy(isSynced = isSame)
+                    }
+                } else {
+                    if (!local.isSynced) {
+                        mergedAccs[local.id] = local
+                    }
+                }
+            }
+            val finalAccs = mergedAccs.values.filter { it.id !in leftAccountsSet }
+
+            // Merge Categories
+            val mergedCats = mutableMapOf<String, CategoryEntity>()
+            remoteCats.forEach { mergedCats[it.id] = it }
+            localCats.forEach { local ->
+                val remote = mergedCats[local.id]
+                if (remote != null) {
+                    if (local.updatedAt >= remote.updatedAt) {
+                        val isSame = local.name == remote.name &&
+                                     local.type == remote.type &&
+                                     local.icon == remote.icon &&
+                                     local.chartColor == remote.chartColor &&
+                                     local.isDeleted == remote.isDeleted &&
+                                     local.updatedAt == remote.updatedAt
+                        mergedCats[local.id] = local.copy(isSynced = isSame)
+                    }
+                } else {
+                    if (!local.isSynced) {
+                        mergedCats[local.id] = local
+                    }
+                }
+            }
+            val finalCats = mergedCats.values.toList()
+
+            // Merge Transactions
+            val mergedTx = mutableMapOf<String, TransactionEntity>()
+            remoteTx.forEach { mergedTx[it.id] = it }
+            localTx.forEach { local ->
+                val remote = mergedTx[local.id]
+                if (remote != null) {
+                    if (local.updatedAt >= remote.updatedAt) {
+                        val isSame = local.amount == remote.amount &&
+                                     local.type == remote.type &&
+                                     local.categoryId == remote.categoryId &&
+                                     local.categoryName == remote.categoryName &&
+                                     local.accountId == remote.accountId &&
+                                     local.accountName == remote.accountName &&
+                                     local.note == remote.note &&
+                                     local.timestamp == remote.timestamp &&
+                                     local.isDeleted == remote.isDeleted &&
+                                     local.updatedAt == remote.updatedAt
+                        mergedTx[local.id] = local.copy(isSynced = isSame)
+                    }
+                } else {
+                    if (!local.isSynced) {
+                        mergedTx[local.id] = local
+                    }
+                }
+            }
+            val finalTx = mergedTx.values.toList()
+
+            // Merge Preferences: local changes win for a normal sync
             val finalPrefs = mutableListOf<PreferenceEntity>()
-
-            if (!hasOfflineData && remoteAccs.isNotEmpty()) {
-                // Fresh login / No offline edits: trust the remote dataset completely
-                finalAccs.addAll(remoteAccs)
-                finalCats.addAll(remoteCats)
-                finalTx.addAll(remoteTx)
-                
-                // For preferences: local wins, fallback to remote for missing
-                val localPrefKeys = localPrefs.map { it.key }.toSet()
-                finalPrefs.addAll(localPrefs)
-                for (remote in remotePrefs) {
-                    if (remote.key !in localPrefKeys) {
-                        finalPrefs.add(remote)
-                    }
-                }
-
-                // If remote doesn't have default_account_personal, ensure we record it as deleted
-                val remoteHasPersonal = remoteAccs.any { it.id == "default_account_personal" }
-                if (!remoteHasPersonal) {
-                    db.preferenceDao().insertPreference(PreferenceEntity("default_account_personal_deleted", "true"))
-                }
-            } else {
-                // Merge remote and local data
-                
-                // 1. Check if we need to delete local default_account_personal
-                val remoteHasAccounts = remoteAccs.isNotEmpty()
-                val remoteHasPersonal = remoteAccs.any { it.id == "default_account_personal" }
-                val localPersonal = localAccs.find { it.id == "default_account_personal" }
-                if (remoteHasAccounts && !remoteHasPersonal && localPersonal != null) {
-                    // Check if there are local transactions pointing to personal
-                    val hasTransactionsForPersonal = localTx.any { it.accountId == "default_account_personal" }
-                    if (!hasTransactionsForPersonal) {
-                        // Delete personal account locally and set preference
-                        db.accountDao().deleteAccount(localPersonal)
-                        db.preferenceDao().insertPreference(PreferenceEntity("default_account_personal_deleted", "true"))
-                    }
-                }
-
-                // Re-read local accounts after potential deletion
-                val localAccsAfterDelete = db.accountDao().getAllAccounts()
-
-                // Merge Accounts
-                for (remote in remoteAccs) {
-                    val local = localAccsAfterDelete.find { it.id == remote.id }
-                    if (local != null && !local.isSynced) {
-                        // Keep local edits (name, icon, color) but keep remote sharing metadata
-                        finalAccs.add(remote.copy(
-                            name = local.name,
-                            icon = local.icon,
-                            color = local.color,
-                            isSynced = false
-                        ))
-                    } else {
-                        finalAccs.add(remote.copy(isSynced = true))
-                    }
-                }
-                for (local in localAccsAfterDelete) {
-                    if (remoteAccs.none { it.id == local.id }) {
-                        finalAccs.add(local)
-                    }
-                }
-
-                // Merge Categories
-                for (remote in remoteCats) {
-                    val local = localCats.find { it.id == remote.id }
-                    if (local != null && !local.isSynced) {
-                        finalCats.add(remote.copy(
-                            name = local.name,
-                            type = local.type,
-                            icon = local.icon,
-                            chartColor = local.chartColor,
-                            isSynced = false
-                        ))
-                    } else {
-                        finalCats.add(remote.copy(isSynced = true))
-                    }
-                }
-                for (local in localCats) {
-                    if (remoteCats.none { it.id == local.id }) {
-                        finalCats.add(local)
-                    }
-                }
-
-                // Merge Transactions
-                for (remote in remoteTx) {
-                    val local = localTx.find { it.id == remote.id }
-                    if (local != null && !local.isSynced) {
-                        finalTx.add(remote.copy(
-                            amount = local.amount,
-                            type = local.type,
-                            categoryId = local.categoryId,
-                            categoryName = local.categoryName,
-                            accountId = local.accountId,
-                            accountName = local.accountName,
-                            note = local.note,
-                            timestamp = local.timestamp,
-                            isSynced = false
-                        ))
-                    } else {
-                        finalTx.add(remote.copy(isSynced = true))
-                    }
-                }
-                for (local in localTx) {
-                    if (remoteTx.none { it.id == local.id }) {
-                        finalTx.add(local)
-                    }
-                }
-
-                // Merge Preferences: local changes win for a normal sync
-                val localPrefKeys = localPrefs.map { it.key }.toSet()
-                finalPrefs.addAll(localPrefs)
-                for (remote in remotePrefs) {
-                    if (remote.key !in localPrefKeys) {
-                        finalPrefs.add(remote)
-                    }
+            val localPrefKeys = localPrefs.map { it.key }.toSet()
+            finalPrefs.addAll(localPrefs)
+            for (remote in remotePrefs) {
+                if (remote.key !in localPrefKeys) {
+                    finalPrefs.add(remote)
                 }
             }
 
@@ -352,12 +321,13 @@ object SheetsSyncManager {
             val delTxStr = db.preferenceDao().getPreferenceValue("deleted_transactions") ?: ""
             val delCatStr = db.preferenceDao().getPreferenceValue("deleted_categories") ?: ""
             val delAccStr = db.preferenceDao().getPreferenceValue("deleted_accounts") ?: ""
+            val leftAccsStrAfterMerge = db.preferenceDao().getPreferenceValue("left_accounts") ?: ""
 
             val preferencesChanged = localPrefs.any { local ->
                 val remote = remotePrefs.find { it.key == local.key }
                 remote == null || remote.value != local.value
             }
-            val hasDeletions = delTxStr.isNotEmpty() || delCatStr.isNotEmpty() || delAccStr.isNotEmpty()
+            val hasDeletions = delTxStr.isNotEmpty() || delCatStr.isNotEmpty() || delAccStr.isNotEmpty() || leftAccsStrAfterMerge.isNotEmpty()
             val hasDirtyChanges = dirtyTx.isNotEmpty() || dirtyCats.isNotEmpty() || dirtyAccs.isNotEmpty() || hasDeletions || preferencesChanged
 
             if (hasDirtyChanges) {
@@ -378,6 +348,10 @@ object SheetsSyncManager {
                 if (delAccStr.isNotEmpty()) delAccStr.split(",").forEach { delAccArray.put(it) }
                 requestJson.put("deleted_accounts", delAccArray)
 
+                val leftAccArray = JSONArray()
+                if (leftAccsStrAfterMerge.isNotEmpty()) leftAccsStrAfterMerge.split(",").forEach { leftAccArray.put(it) }
+                requestJson.put("left_accounts", leftAccArray)
+
                 val txArray = JSONArray()
                 dirtyTx.forEach { tx ->
                     val o = JSONObject()
@@ -391,6 +365,9 @@ object SheetsSyncManager {
                     o.put("note", tx.note)
                     o.put("timestamp", tx.timestamp)
                     o.put("userEmail", tx.userEmail ?: email)
+                    o.put("updatedAt", tx.updatedAt)
+                    o.put("isDeleted", tx.isDeleted)
+                    o.put("deletedAt", tx.deletedAt ?: JSONObject.NULL)
                     txArray.put(o)
                 }
                 requestJson.put("transactions", txArray)
@@ -405,6 +382,9 @@ object SheetsSyncManager {
                     o.put("isDefault", cat.isDefault)
                     o.put("chartColor", cat.chartColor)
                     o.put("userEmail", cat.userEmail ?: email)
+                    o.put("updatedAt", cat.updatedAt)
+                    o.put("isDeleted", cat.isDeleted)
+                    o.put("deletedAt", cat.deletedAt ?: JSONObject.NULL)
                     catArray.put(o)
                 }
                 requestJson.put("categories", catArray)
@@ -420,6 +400,9 @@ object SheetsSyncManager {
                     o.put("shareCode", acc.shareCode ?: "")
                     o.put("ownerEmail", acc.ownerEmail ?: email)
                     o.put("userEmail", acc.userEmail ?: email)
+                    o.put("updatedAt", acc.updatedAt)
+                    o.put("isDeleted", acc.isDeleted)
+                    o.put("deletedAt", acc.deletedAt ?: JSONObject.NULL)
                     accArray.put(o)
                 }
                 requestJson.put("accounts", accArray)
@@ -448,6 +431,7 @@ object SheetsSyncManager {
                         db.preferenceDao().insertPreference(PreferenceEntity("deleted_transactions", ""))
                         db.preferenceDao().insertPreference(PreferenceEntity("deleted_categories", ""))
                         db.preferenceDao().insertPreference(PreferenceEntity("deleted_accounts", ""))
+                        db.preferenceDao().insertPreference(PreferenceEntity("left_accounts", ""))
                     }
                 }
             }
@@ -459,4 +443,5 @@ object SheetsSyncManager {
             throw e
         }
     }
+
 }

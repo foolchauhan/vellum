@@ -12,6 +12,9 @@ import com.example.vellum.data.DataRepository
 import com.example.vellum.ui.main.MainScreen
 import com.example.vellum.ui.main.MainScreenViewModel
 import com.example.vellum.ui.main.SettingsScreen
+import com.example.vellum.ui.main.AddEditTransactionScreen
+import com.example.vellum.ui.main.AddEditCategoryScreen
+import com.example.vellum.ui.main.AddEditAccountScreen
 import com.example.vellum.ui.components.ParchmentBackground
 
 @Composable
@@ -50,6 +53,33 @@ fun MainNavigation(repository: DataRepository) {
                         modifier = Modifier.safeDrawingPadding()
                     )
                 }
+            }
+            entry<AddEditTransaction> { key ->
+                AddEditTransactionScreen(
+                    viewModel = sharedViewModel,
+                    predefinedType = key.predefinedType,
+                    transactionId = key.transactionId,
+                    onBack = { backStack.removeLastOrNull() },
+                    onNavigate = { navKey -> backStack.add(navKey) },
+                    modifier = Modifier.safeDrawingPadding()
+                )
+            }
+            entry<AddEditCategory> { key ->
+                AddEditCategoryScreen(
+                    viewModel = sharedViewModel,
+                    predefinedType = key.predefinedType,
+                    categoryId = key.categoryId,
+                    onBack = { backStack.removeLastOrNull() },
+                    modifier = Modifier.safeDrawingPadding()
+                )
+            }
+            entry<AddEditAccount> { key ->
+                AddEditAccountScreen(
+                    viewModel = sharedViewModel,
+                    accountId = key.accountId,
+                    onBack = { backStack.removeLastOrNull() },
+                    modifier = Modifier.safeDrawingPadding()
+                )
             }
         }
     )

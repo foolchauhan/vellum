@@ -23,7 +23,6 @@ import com.example.vellum.theme.*
 import com.example.vellum.ui.components.HorizontalDivider
 import com.example.vellum.ui.components.ParchmentBackground
 import com.example.vellum.ui.components.getIconForName
-import com.example.vellum.ui.dialogs.AddAccountDialog
 import com.example.vellum.ui.dialogs.JoinSharedAccountDialog
 import com.example.vellum.ui.main.MainScreenViewModel
 import com.example.vellum.data.local.AccountEntity
@@ -31,14 +30,12 @@ import com.example.vellum.data.local.AccountEntity
 @Composable
 fun AccountsTab(
     viewModel: MainScreenViewModel,
-    showAddAccountDialog: Boolean,
-    onDismissAccountDialog: () -> Unit
+    onNavigate: (androidx.navigation3.runtime.NavKey) -> Unit
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val preferences by viewModel.preferences.collectAsState()
     val isOutlined = preferences["category_icon_style"] == "Outlined"
     var showJoinDialog by remember { mutableStateOf(false) }
-    var accountToEdit by remember { mutableStateOf<AccountEntity?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -58,7 +55,7 @@ fun AccountsTab(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                accountToEdit = acc
+                                onNavigate(com.example.vellum.AddEditAccount(accountId = acc.id))
                             }
                             .padding(vertical = 12.dp, horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -128,21 +125,6 @@ fun AccountsTab(
         }
     }
 
-    if (showAddAccountDialog) {
-        AddAccountDialog(
-            viewModel = viewModel,
-            onDismiss = onDismissAccountDialog
-        )
-    }
-
-    if (accountToEdit != null) {
-        AddAccountDialog(
-            viewModel = viewModel,
-            accountToEdit = accountToEdit,
-            onDismiss = { accountToEdit = null }
-        )
-    }
-
     if (showJoinDialog) {
         JoinSharedAccountDialog(
             viewModel = viewModel,
@@ -150,3 +132,4 @@ fun AccountsTab(
         )
     }
 }
+
