@@ -147,7 +147,8 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
 4. **Branch policy**:
    - No direct commits to `main`, `develop`, or `release/*` — PR required
    - All branches (feature, fix, chore, integration) are **never deleted** — kept permanently for history
-   - Branch protection rules to be configured on GitHub (see Section 1.3 above)
+   - [x] Configure GitHub Branch Protection Rules for `develop` and `release/*`
+- [x] Perform requested cosmetic tweaks and additional UI functions (to be specified by user)
 
 ### Phase 7: Sync Reliability & Conflict Handling — Completed (2026-05-30)
 1. **Schema & DB Migration**: Added `updatedAt`, `isDeleted`, and `deletedAt` columns to `transactions`, `categories`, and `accounts` (Room DB migration v3 → v4).
@@ -166,16 +167,26 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
    - Fixed category color collisions by dynamically overriding duplicate colors from a Pool of distinct colors.
    - Rotated landscape bar graph labels by `45 degrees` and expanded bottom padding to `70.dp` to prevent horizontal text overlaps.
 
+### Phase 9: UI Polish, Custom PDF/CSV Exports, and Renamed Release APK — Completed (2026-05-31)
+1. **Screen Consistency & Keyboard Insets**: Passed `Modifier.safeDrawingPadding()` down from `Navigation.kt` to the Add/Edit screens (`AddEditTransactionScreen`, `AddEditCategoryScreen`, `AddEditAccountScreen`) and applied it to their root scrollable `Column` container. This keeps forms from going behind the status and navigation bars, and automatically shrinks the scroll layout when the soft keyboard is open, making the bottom notes section scrollable and visible.
+2. **Export Filtering & custom dialog**: Redesigned `ShareExportDialog.kt` to let users filter their transactions by Account, Period Type ("All Time", "Daily", "Weekly", "Monthly", "Yearly"), and specific Date/Week/Month/Year ranges before initiating the download.
+3. **Professional CSV & PDF Export**: Created `ExportManager.kt` containing robust exporters:
+   - **CSV Export**: Writes transactions in the exact template format (`Date,Type,Amount,Category,Account,Note`).
+   - **PDF Export**: Draws a professional, multi-page financial statement utilizing native Android `PdfDocument` and `Canvas`. It renders the app's real `blackboard_background_01` chalkboard texture and actual `ic_launcher` app icon in the header, shows active filter metadata, aggregates Total Income, Total Expenses, and Net Balance in grid cards, draws horizontal category progress bar breakdown charts, and renders detailed alternating-row transaction history logs.
+4. **Dynamic Context-Specific File Naming**: Configured the SAF `CreateDocument` launchers inside `TransactionsTab.kt` to name output files dynamically based on selected filters (e.g. `vellum_personal_report_may_2026.pdf` or `vellum_all_transactions_yearly_2026.csv`).
+5. **Spending tab Active Account Context**: Updated the period selector in `SpendingTab.kt` to display the active account's name centered between the arrow navigation keys.
+6. **Automatic Release APK Renaming**: Configured the `release` block inside `app/build.gradle.kts` to sign itself using the debug keystore (making it easily installable for family/friends) and automatically rename the output file to `Vellum.apk`.
+
 ---
 
 ## 3. Verification & Deployment Status
 
 | Check | Status |
 |---|---|
-| Gradle compilation | ✅ Clean — `./gradlew assembleDebug` succeeds |
-| APK assembly | ✅ Debug APK built successfully |
-| Device deployment | ✅ Installed and verified on `192.168.1.5:38043` |
-| GitHub push | ✅ Feature branch matches local state |
+| Gradle compilation | ✅ Clean — `./gradlew assembleDebug` and `./gradlew assembleRelease` succeed |
+| APK assembly | ✅ `Vellum.apk` release build built successfully |
+| Device deployment | ✅ Installed and verified on `192.168.1.5:45011` |
+| GitHub push | ✅ All branches merged locally and pushed (`main`, `develop`, `release/release-1.0.0`, and feature branch) |
 | MD documentation | ✅ All project MD files updated with current session milestones |
 
 ---
@@ -183,20 +194,10 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
 ## 4. Pending / Next Session
 
 > [!NOTE]
-> All core features of Phase 7 (Sync Reliability) and Phase 8 (Full-Screen Forms / Bulk Upload) are fully implemented, verified, and successfully deployed on the device.
-> Tomorrow's session will resume on the same branch (`feature/sync-reliability-and-conflict-handling`) to make cosmetic adjustments and additional UI functionalities.
-
-**Resume steps for tomorrow:**
-```bash
-# Step 1 — verify current branch is active
-git branch --show-current   # should show feature/sync-reliability-and-conflict-handling
-
-# Step 2 — continue working on cosmetic changes and minor UI requests
-```
+> All core features of Phase 9 (UI Polish, Custom PDF/CSV Exports, and Renamed Release APK) are fully implemented, verified, and successfully deployed on the device.
+> All branches have been merged and pushed to GitHub.
 
 **Upcoming Tasks:**
-- [ ] Configure GitHub Branch Protection Rules for `develop` and `release/*`
-- [ ] Perform requested cosmetic tweaks and additional UI functions (to be specified by user)
 - [ ] Implement Dropbox Sync integration logic
 - [ ] Implement Passcode lock screen authentication logic
 - [ ] Implement Reminders notifications trigger logic
