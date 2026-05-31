@@ -2,23 +2,64 @@
 
 This document preserves the current status, codebase architecture, achievements, and completed tasks for the Vellum Android project.
 
+> [!CAUTION]
+> **Session Start Rule**: Before touching any file, run `git branch --show-current`. If you are on `develop`, `main`, or `release/*` — STOP and create a feature branch first. See [AGENT.md](AGENT.md) Section 4 for the full workflow.
+
 ---
 
 ## 1. Active Context & Current State
 
-1. **Platform**: Native Android App (Kotlin, Jetpack Compose, Room SQLite database).
-2. **Local Environment**:
-   - SDK: `~/Library/Android/sdk`
-   - Gradle wrapper: `./gradlew`
-   - Device: Connected physical phone: `adb-10BFBJ1Y4G001TE-06Tqpr._adb-tls-connect._tcp`
-3. **Codebase Navigation Guide**:
-   - [MainActivity.kt](app/src/main/java/com/example/vellum/MainActivity.kt): App entrypoint, Google Sign-in flow host.
-   - [Navigation.kt](app/src/main/java/com/example/vellum/Navigation.kt): Main navigation entry provider and Google account sign-in restoration.
-   - [MainScreen.kt](app/src/main/java/com/example/vellum/ui/main/MainScreen.kt): Main dashboard page shell, horizontal pager container, tab indicators, and Google Sheets manual refresh button.
-   - [AppScreens.kt](app/src/main/java/com/example/vellum/ui/main/AppScreens.kt): Spending graph layouts, transaction row managers, Add transaction/account/category forms, and custom Google Profile Card & UrlInputDialog.
-   - [SheetsSyncManager.kt](app/src/main/java/com/example/vellum/data/SheetsSyncManager.kt): Network sync engine resolving 302/307/308 redirection responses.
-   - [Type.kt](app/src/main/java/com/example/vellum/theme/Type.kt): Typography configuration using handwriting `patrick_hand.ttf` font.
-   - [Color.kt](app/src/main/java/com/example/vellum/theme/Color.kt): Remaps design tokens to chalkboard slate aesthetics.
+### 1.1 Platform & Environment
+| Item | Value |
+|---|---|
+| Platform | Native Android App — Kotlin, Jetpack Compose, Room SQLite |
+| Android SDK | `~/Library/Android/sdk` |
+| Build tool | `./gradlew assembleDebug` |
+| Physical device | `adb-10BFBJ1Y4G001TE-06Tqpr._adb-tls-connect._tcp` |
+| Last verified IP | `192.168.1.5:38043` |
+
+### 1.2 Git Repository State (as of 2026-05-30)
+| Item | Value |
+|---|---|
+| Remote | `git@github.com:foolchauhan/vellum.git` (SSH) |
+| SSH key | `~/.ssh/id_rsa` — authenticated, no password needed |
+| Current local branch | `feature/sync-reliability-and-conflict-handling` |
+| Last commit | `051cb9a` — docs: branches are never deleted (working directory has uncommitted modifications) |
+
+**Active branches (all on GitHub):**
+```
+main                       ← stable production snapshot
+develop                    ← integration branch
+release/release-1.0.0      ← v1.0.0 frozen release snapshot
+feature/sync-reliability-and-conflict-handling   ← active development branch (resuming here)
+```
+
+> [!IMPORTANT]
+> **To resume tomorrow**: Stay on the active feature branch `feature/sync-reliability-and-conflict-handling` and continue implementing cosmetic and functional UI improvements.
+
+### 1.3 Branch Protection (TODO — must be configured on GitHub)
+Go to → https://github.com/foolchauhan/vellum/settings/branches
+- Add rules for `develop` and `release/*`
+- Enable: "Require PR before merging", "Require approvals", "Block direct pushes", "Include administrators"
+
+### 1.4 Codebase Navigation Guide
+
+| File | Purpose |
+|---|---|
+| [MainActivity.kt](app/src/main/java/com/example/vellum/MainActivity.kt) | App entrypoint, Google Sign-in flow host |
+| [Navigation.kt](app/src/main/java/com/example/vellum/Navigation.kt) | Compose Navigation routes & Google account sign-in restoration |
+| [MainScreen.kt](app/src/main/java/com/example/vellum/ui/main/MainScreen.kt) | Main dashboard shell — HorizontalPager, tabs, top bar, landscape redirect |
+| [LandscapeReports.kt](app/src/main/java/com/example/vellum/ui/main/LandscapeReports.kt) | Full landscape reports dashboard — Pie, Bar, Cash Flow charts |
+| [MainScreenViewModel.kt](app/src/main/java/com/example/vellum/ui/main/MainScreenViewModel.kt) | State manager for all database events and period navigation |
+| [AppScreens.kt](app/src/main/java/com/example/vellum/ui/main/AppScreens.kt) | Spending graph layouts, transaction row managers, all Add/Edit dialogs |
+| [SheetsSyncManager.kt](app/src/main/java/com/example/vellum/data/SheetsSyncManager.kt) | Network sync engine, handles 302/307/308 redirects |
+| [DataRepository.kt](app/src/main/java/com/example/vellum/data/DataRepository.kt) | Repository exposing Room flows to ViewModel |
+| [Entities.kt](app/src/main/java/com/example/vellum/data/local/Entities.kt) | Room DB entity definitions (transactions, categories, accounts, preferences) |
+| [Daos.kt](app/src/main/java/com/example/vellum/data/local/Daos.kt) | Room DAO query definitions |
+| [VellumDatabase.kt](app/src/main/java/com/example/vellum/data/local/VellumDatabase.kt) | Preloaded SQLite database instance with migration support |
+| [Color.kt](app/src/main/java/com/example/vellum/theme/Color.kt) | Chalkboard and parchment design token hex colors |
+| [Type.kt](app/src/main/java/com/example/vellum/theme/Type.kt) | Typography using `patrick_hand.ttf` handwriting font |
+| [scripts/Code.gs](scripts/Code.gs) | Google Apps Script backend — sync gateway, backup triggers, reset utility |
 
 ---
 
@@ -45,7 +86,7 @@ This document preserves the current status, codebase architecture, achievements,
 1. **Google Sign-In**:
    - Native integration with Google Play Services Auth.
    - Top-left circular profile avatar showing user's name initials.
-   - settings pane features a Google Profile Card for logging in and logging out.
+   - Settings pane features a Google Profile Card for logging in and logging out.
 2. **Google Sheets Sync Gateway**:
    - Migrated SQLite tables to Version 3 schema using unique UUID string primary keys to prevent multi-device write conflicts.
    - Implemented `SheetsSyncManager` to handle redirects (302/307/308) from Google Apps Script Web Apps.
@@ -69,26 +110,94 @@ This document preserves the current status, codebase architecture, achievements,
    - Automatically wipes the Room database and logs out of Google Sign-in on the first startup of a debug installation to provide a clean slate.
    - Removed all references, navigation entries, and screen files for the unused Cafe Menu page.
    - Added a manual `resetSpreadsheet()` function in `Code.gs` for manual testing.
+4. **Settings Sync Fix**:
+   - Local settings preferences now correctly override remote preferences pulled from Google Sheets. Saving a setting no longer gets overwritten on the next sync.
 
 ### Phase 5: Seamless Transitions & Premium Landscape Reports Dashboard
-1. **Seamless Transitions**:
-   - Made the background completely static and seamless across all tabs by removing the overlay background fade in `MainScreen.kt`, eliminating transition lag and visual gaps.
-2. **System Boundaries**:
-   - Restored standard system bar margins (status bar and bottom nav bar boundaries) in landscape orientation, respecting safe drawing boundaries.
-3. **Pagination & Centered Bar Charts**:
-   - Groups category bars closely together and centers them on the canvas.
-   - Drawn a clean horizontal baseline supporting better viewability.
-   - Sliced the category data into pages of 5 items, allowing users to scroll page-by-page using the top-left `-` and `+` action buttons.
-4. **Cash Flow Interval Selector & Dynamic Currency Labels**:
-   - Implemented an interval selector toggle (`D`, `W`, `M`, `Y`) in the top-left of the Cash Flow screen.
-   - Added `calculateCashFlowData` to dynamically partition transaction statistics into Daily, Weekly, Monthly, and Yearly intervals over the past 12 periods.
-   - Added a dynamic period title in the top-right (e.g. `"Last 12 Days"`, `"Last 12 Weeks"`) based on the selected interval.
-   - Retrieved the user's active currency symbol (`currencySymbol`) and passed it to the chart canvases, replacing hardcoded symbols.
+1. **Seamless Tab Transitions**:
+   - Removed the `ChalkboardBackground` fading overlay from `MainScreen.kt` that was causing a black flash during the Spending → Transactions swipe.
+   - The `ParchmentBackground` is now drawn once, statically, behind all tabs — the background no longer moves or re-renders during swipes.
+2. **System Boundaries in Landscape**:
+   - `LandscapeReports` now respects system safe drawing boundaries (status bar + nav bar) in landscape orientation.
+3. **Bar Chart Improvements**:
+   - Bars are grouped closely together and centered on the canvas.
+   - A clean horizontal baseline is drawn for better viewability.
+   - Category data is paginated — 5 bars per page — with top-left `-` / `+` page navigation buttons.
+4. **Cash Flow Interval Selector**:
+   - Added `D` / `W` / `M` / `Y` toggle in the top-left of the Cash Flow report.
+   - `calculateCashFlowData()` dynamically computes income and expense sums for Daily, Weekly, Monthly, or Yearly intervals over the last 12 periods.
+   - Top-right shows a dynamic label: `"Last 12 Days"`, `"Last 12 Weeks"`, `"Last 12 Months"`, `"Last 12 Years"`.
+   - Currency symbol from user preferences (`currencySymbol`) passed to all chart canvases — no hardcoded symbols.
+5. **Pie Chart — not full screen**:
+   - Pie chart is now rendered at a fixed `220.dp` size rather than filling the entire canvas, giving breathing room around the chart.
+
+### Phase 6: GitHub Repository & Branching Setup (2026-05-29)
+1. **GitHub Repository created**: `https://github.com/foolchauhan/vellum`
+   - SSH remote configured: `git@github.com:foolchauhan/vellum.git`
+   - SSH key `~/.ssh/id_rsa` authenticated — works without password.
+2. **Branches pushed**:
+   - `main` — stable production snapshot (initial commit `d26e5c4`)
+   - `develop` — integration branch, synced from main
+   - `release/release-1.0.0` — first release snapshot (frozen at v1.0.0)
+3. **Branching workflow documented** in all MD files:
+   - [AGENT.md](AGENT.md) — full mandatory workflow (Section 4)
+   - [README.md](README.md) — branch structure and quick-start
+   - [PROJECT.md](PROJECT.md) — version control section (Section 6)
+   - [HANDOVER.md](HANDOVER.md) — this file, session start rules and state
+4. **Branch policy**:
+   - No direct commits to `main`, `develop`, or `release/*` — PR required
+   - All branches (feature, fix, chore, integration) are **never deleted** — kept permanently for history
+   - Branch protection rules to be configured on GitHub (see Section 1.3 above)
+
+### Phase 7: Sync Reliability & Conflict Handling — Completed (2026-05-30)
+1. **Schema & DB Migration**: Added `updatedAt`, `isDeleted`, and `deletedAt` columns to `transactions`, `categories`, and `accounts` (Room DB migration v3 → v4).
+2. **Soft-Delete Implementation**: Routed UI category, transaction, and account deletions to soft-delete mark update queries, filtering out `isDeleted = 1` rows in active UI flows.
+3. **Leave vs Delete Separation**: Implemented `leaveAccount` in repository to let non-owner members leave shared accounts without cascade-deleting shared transactions.
+4. **LWW Sync Gateway**: Replaced App Script appends with upserts by UUID (idempotent writes), added owner delete guards, and applied GET-first Last-Write-Wins merges on the client using UTC epoch millisecond timestamps.
+5. **Display Joins**: Fixed category/account text resolution to run joins on active cache lists at display time.
+
+### Phase 8: Full-Screen Refactoring & CSV Bulk Upload — Completed (2026-05-30)
+1. **Full-Screen Forms**: Refactored transaction, category, and account Add/Edit popup dialog overlays into full-page screens via `Navigation3` routes (`AddEditTransactionScreen`, `AddEditCategoryScreen`, `AddEditAccountScreen`).
+2. **Category Auto-Selection**: Added reactive `LaunchedEffect` mapping that auto-selects newly created categories when returning from category forms.
+3. **CSV Bulk Upload**: Created settings-linked **Download CSV Template** (SAF `CreateDocument`) and **Bulk Upload CSV** (`GetContent`) options, which auto-seeds missing categories and accounts with default styles.
+4. **Ui Enhancements**:
+   - Redesigned vertical `SpendingTab` into a scrollable area with sticky headers and bottom action buttons.
+   - Added **Spending by Category** list with color markers and dividers.
+   - Fixed category color collisions by dynamically overriding duplicate colors from a Pool of distinct colors.
+   - Rotated landscape bar graph labels by `45 degrees` and expanded bottom padding to `70.dp` to prevent horizontal text overlaps.
 
 ---
 
 ## 3. Verification & Deployment Status
 
-- **Compilation**: Successfully compiles with Gradle without warnings or errors.
-- **Packaging**: Successful APK assembly using `./gradlew assembleDebug`.
-- **Deployment**: Installed and verified on the connected target device (`192.168.1.4:35535`).
+| Check | Status |
+|---|---|
+| Gradle compilation | ✅ Clean — `./gradlew assembleDebug` succeeds |
+| APK assembly | ✅ Debug APK built successfully |
+| Device deployment | ✅ Installed and verified on `192.168.1.5:38043` |
+| GitHub push | ✅ Feature branch matches local state |
+| MD documentation | ✅ All project MD files updated with current session milestones |
+
+---
+
+## 4. Pending / Next Session
+
+> [!NOTE]
+> All core features of Phase 7 (Sync Reliability) and Phase 8 (Full-Screen Forms / Bulk Upload) are fully implemented, verified, and successfully deployed on the device.
+> Tomorrow's session will resume on the same branch (`feature/sync-reliability-and-conflict-handling`) to make cosmetic adjustments and additional UI functionalities.
+
+**Resume steps for tomorrow:**
+```bash
+# Step 1 — verify current branch is active
+git branch --show-current   # should show feature/sync-reliability-and-conflict-handling
+
+# Step 2 — continue working on cosmetic changes and minor UI requests
+```
+
+**Upcoming Tasks:**
+- [ ] Configure GitHub Branch Protection Rules for `develop` and `release/*`
+- [ ] Perform requested cosmetic tweaks and additional UI functions (to be specified by user)
+- [ ] Implement Dropbox Sync integration logic
+- [ ] Implement Passcode lock screen authentication logic
+- [ ] Implement Reminders notifications trigger logic
+

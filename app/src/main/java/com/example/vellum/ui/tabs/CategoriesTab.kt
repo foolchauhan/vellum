@@ -21,22 +21,19 @@ import com.example.vellum.theme.*
 import com.example.vellum.ui.components.HorizontalDivider
 import com.example.vellum.ui.components.ParchmentBackground
 import com.example.vellum.ui.components.getIconForName
-import com.example.vellum.ui.dialogs.AddCategoryDialog
 import com.example.vellum.ui.main.MainScreenViewModel
 import com.example.vellum.data.local.CategoryEntity
 
 @Composable
 fun CategoriesTab(
     viewModel: MainScreenViewModel,
-    showAddCategoryDialog: Boolean,
-    onDismissCategoryDialog: () -> Unit
+    onNavigate: (androidx.navigation3.runtime.NavKey) -> Unit
 ) {
     val categories by viewModel.categories.collectAsState()
     val preferences by viewModel.preferences.collectAsState()
     val allTransactions by viewModel.allTransactions.collectAsState()
     val isOutlined = preferences["category_icon_style"] == "Outlined"
     var selectedType by remember { mutableStateOf("EXPENSE") }
-    var categoryToEdit by remember { mutableStateOf<CategoryEntity?>(null) }
 
     val categoryUsageCounts = remember(allTransactions) {
         allTransactions.groupBy { it.categoryId }.mapValues { it.value.size }
@@ -107,7 +104,7 @@ fun CategoriesTab(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                categoryToEdit = cat
+                                onNavigate(com.example.vellum.AddEditCategory(categoryId = cat.id, predefinedType = selectedType))
                             }
                             .padding(vertical = 12.dp, horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -132,21 +129,5 @@ fun CategoriesTab(
             }
         }
     }
-
-    if (showAddCategoryDialog) {
-        AddCategoryDialog(
-            viewModel = viewModel,
-            predefinedType = selectedType,
-            onDismiss = onDismissCategoryDialog
-        )
-    }
-
-    if (categoryToEdit != null) {
-        AddCategoryDialog(
-            viewModel = viewModel,
-            predefinedType = selectedType,
-            categoryToEdit = categoryToEdit,
-            onDismiss = { categoryToEdit = null }
-        )
-    }
 }
+

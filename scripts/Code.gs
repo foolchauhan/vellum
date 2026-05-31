@@ -54,14 +54,11 @@ function doPost(e) {
   }
   
   // 1. Process deletions
-  if (data.deleted_transactions && data.deleted_transactions.length > 0) {
-    deleteRowsByIds(spreadsheet.getSheetByName("transactions"), data.deleted_transactions, 0);
-  }
-  if (data.deleted_categories && data.deleted_categories.length > 0) {
-    deleteRowsByIds(spreadsheet.getSheetByName("categories"), data.deleted_categories, 0);
+  if (data.left_accounts && data.left_accounts.length > 0) {
+    processLeftAccounts(spreadsheet, email, data.left_accounts);
   }
   if (data.deleted_accounts && data.deleted_accounts.length > 0) {
-    deleteAccountsWithCascade(spreadsheet, email, data.deleted_accounts);
+    processDeletedAccounts(spreadsheet, email, data.deleted_accounts);
   }
   
   // 2. Save sync data
@@ -83,9 +80,9 @@ function setupSheets(ss) {
   }
   
   var sheetsConfig = {
-    "transactions": ["id", "amount", "type", "categoryId", "categoryName", "accountId", "accountName", "note", "timestamp", "userEmail"],
-    "categories": ["id", "name", "type", "icon", "isDefault", "chartColor", "userEmail"],
-    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail"],
+    "transactions": ["id", "amount", "type", "categoryId", "categoryName", "accountId", "accountName", "note", "timestamp", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
+    "categories": ["id", "name", "type", "icon", "isDefault", "chartColor", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
+    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
     "preferences": ["key", "value", "userEmail"],
     "shares": ["shareCode", "userEmail"],
     "users": ["email", "displayName", "photoUrl", "lastSeen"]
@@ -98,10 +95,42 @@ function setupSheets(ss) {
     }
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(sheetsConfig[name]);
+    } else {
+      // Dynamic upgrade: append missing header columns
+      var headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getValues()[0];
+      var expectedHeaders = sheetsConfig[name];
+      var missingHeaders = expectedHeaders.filter(function(h) { return headers.indexOf(h) === -1; });
+      if (missingHeaders.length > 0) {
+        var startCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, startCol, 1, missingHeaders.length).setValues([missingHeaders]);
+      }
     }
   }
   
   manageBackupTrigger();
+}
+
+function rowToObject(row, headers) {
+  var obj = {};
+  headers.forEach(function(header, idx) {
+    var val = row[idx];
+    if (val === undefined) {
+      val = "";
+    }
+    // Parse types
+    if (header === "amount" || header === "timestamp" || header === "updatedAt" || header === "deletedAt" || header === "lastSeen") {
+      if (val === "" || val === null) {
+        obj[header] = (header === "deletedAt") ? null : 0;
+      } else {
+        obj[header] = parseFloat(val);
+      }
+    } else if (header === "isDefault" || header === "isDeleted") {
+      obj[header] = (val === true || val === "true" || val === 1 || val === "1");
+    } else {
+      obj[header] = val;
+    }
+  });
+  return obj;
 }
 
 function getSyncData(ss, email) {
@@ -116,122 +145,76 @@ function getSyncData(ss, email) {
   
   var accountsSheet = ss.getSheetByName("accounts");
   var accountsData = accountsSheet.getDataRange().getValues();
+  var accountsHeaders = accountsData[0];
   var accountsList = [];
   var matchedAccountIds = {};
-  // Track which accounts are truly shared (not owned by requesting user)
   var sharedAccountIds = {};
   
   for (var i = 1; i < accountsData.length; i++) {
-    var row = accountsData[i];
-    var accOwner = row[6];
-    var accShareCode = row[5];
-    var accUserEmail = row[7];
+    var obj = rowToObject(accountsData[i], accountsHeaders);
+    var accOwner = obj.ownerEmail;
+    var accShareCode = obj.shareCode;
+    var accUserEmail = obj.userEmail;
     if (accOwner === email || accUserEmail === email || joinedCodes.indexOf(accShareCode) !== -1) {
-      accountsList.push({
-        id: row[0],
-        name: row[1],
-        icon: row[2],
-        isDefault: row[3] === true || row[3] === "true",
-        color: row[4],
-        shareCode: row[5],
-        ownerEmail: row[6],
-        userEmail: row[7]
-      });
-      matchedAccountIds[row[0]] = true;
-      // Track shared accounts (joined via share code where user is not the owner)
+      accountsList.push(obj);
+      matchedAccountIds[obj.id] = true;
       if (accOwner !== email && joinedCodes.indexOf(accShareCode) !== -1) {
-        sharedAccountIds[row[0]] = true;
+        sharedAccountIds[obj.id] = true;
       }
     }
   }
   
   var txSheet = ss.getSheetByName("transactions");
   var txData = txSheet.getDataRange().getValues();
+  var txHeaders = txData[0];
   var txList = [];
-  // Collect category IDs referenced by transactions in shared accounts (for cross-user category propagation)
   var sharedTxCategoryIds = {};
   for (var i = 1; i < txData.length; i++) {
-    var row = txData[i];
-    var txAccId = row[5];
-    var txOwner = row[9];
+    var obj = rowToObject(txData[i], txHeaders);
+    var txAccId = obj.accountId;
+    var txOwner = obj.userEmail;
     if (txOwner === email || matchedAccountIds[txAccId]) {
-      txList.push({
-        id: row[0],
-        amount: parseFloat(row[1]),
-        type: row[2],
-        categoryId: row[3],
-        categoryName: row[4],
-        accountId: row[5],
-        accountName: row[6],
-        note: row[7],
-        timestamp: parseInt(row[8]),
-        userEmail: row[9]
-      });
-      // If this transaction is in a shared account (not owned by user), track its category
+      txList.push(obj);
       if (sharedAccountIds[txAccId] || (matchedAccountIds[txAccId] && txOwner !== email)) {
-        sharedTxCategoryIds[row[3]] = true;
+        sharedTxCategoryIds[obj.categoryId] = true;
       }
     }
   }
   
   var catSheet = ss.getSheetByName("categories");
   var catData = catSheet.getDataRange().getValues();
+  var catHeaders = catData[0];
   var catList = [];
   var catIdsSeen = {};
-  // First pass: collect the user's own categories and global defaults
   for (var i = 1; i < catData.length; i++) {
-    var row = catData[i];
-    var catOwner = row[6];
-    var catId = row[0];
-    if (catOwner === email || row[4] === true || row[4] === "true") {
+    var obj = rowToObject(catData[i], catHeaders);
+    var catOwner = obj.userEmail;
+    var catId = obj.id;
+    if (catOwner === email || obj.isDefault) {
       catIdsSeen[catId] = true;
-      catList.push({
-        id: catId,
-        name: row[1],
-        type: row[2],
-        icon: row[3],
-        isDefault: row[4] === true || row[4] === "true",
-        chartColor: row[5],
-        userEmail: row[6]
-      });
+      catList.push(obj);
     }
   }
   
-  // Shared Category Propagation (2nd pass):
-  // Include any categories referenced by shared account transactions that the
-  // requesting user doesn't already have. This ensures all shared account members
-  // see consistent category names/icons even when the category belongs to another user.
-  // Categories are propagated read-only — the original owner's email is preserved.
   if (Object.keys(sharedTxCategoryIds).length > 0) {
     for (var i = 1; i < catData.length; i++) {
-      var row = catData[i];
-      var catId = row[0];
+      var obj = rowToObject(catData[i], catHeaders);
+      var catId = obj.id;
       if (sharedTxCategoryIds[catId] && !catIdsSeen[catId]) {
         catIdsSeen[catId] = true;
-        catList.push({
-          id: catId,
-          name: row[1],
-          type: row[2],
-          icon: row[3],
-          isDefault: row[4] === true || row[4] === "true",
-          chartColor: row[5],
-          userEmail: row[6]  // Keep original owner so client knows it's a propagated category
-        });
+        catList.push(obj);
       }
     }
   }
   
   var prefSheet = ss.getSheetByName("preferences");
   var prefData = prefSheet.getDataRange().getValues();
+  var prefHeaders = prefData[0];
   var prefList = [];
   for (var i = 1; i < prefData.length; i++) {
-    var row = prefData[i];
-    if (row[2] === email) {
-      prefList.push({
-        key: row[0],
-        value: row[1],
-        userEmail: row[2]
-      });
+    var obj = rowToObject(prefData[i], prefHeaders);
+    if (obj.userEmail === email) {
+      prefList.push(obj);
     }
   }
   
@@ -259,7 +242,7 @@ function upsertRows(sheet, items, idColIndex, sheetName, email) {
   var keyToRowMap = {};
   for (var i = 1; i < values.length; i++) {
     if (sheetName === "preferences") {
-      var rowKey = values[i][0] + "_" + values[i][2]; // key + "_" + userEmail
+      var rowKey = values[i][0] + "_" + values[i][2];
       keyToRowMap[rowKey] = i + 1;
     } else {
       var id = values[i][idColIndex];
@@ -271,7 +254,6 @@ function upsertRows(sheet, items, idColIndex, sheetName, email) {
     if (!item.userEmail && email) {
       item.userEmail = email;
     }
-    // Protect shared account userEmail and ownerEmail values
     if (sheetName === "accounts" && item.shareCode && item.shareCode !== "") {
       item.userEmail = item.ownerEmail;
     }
@@ -371,37 +353,84 @@ function saveUser(ss, email, displayName, photoUrl) {
   }
 }
 
-function deleteAccountsWithCascade(ss, email, accountIds) {
+function processLeftAccounts(ss, email, accountIds) {
   var accountsSheet = ss.getSheetByName("accounts");
   var accountsData = accountsSheet.getDataRange().getValues();
   
   accountIds.forEach(function(accId) {
-    var rowIndex = -1;
+    var accShareCode = "";
+    for (var i = 1; i < accountsData.length; i++) {
+      if (accountsData[i][0] === accId) {
+        accShareCode = accountsData[i][5];
+        break;
+      }
+    }
+    if (accShareCode) {
+      deleteShareForUser(ss, accShareCode, email);
+    }
+  });
+}
+
+function processDeletedAccounts(ss, email, accountIds) {
+  var sharesSheet = ss.getSheetByName("shares");
+  var sharesData = sharesSheet.getDataRange().getValues();
+  
+  var accountsSheet = ss.getSheetByName("accounts");
+  var accountsData = accountsSheet.getDataRange().getValues();
+  
+  accountIds.forEach(function(accId) {
+    var accRowIdx = -1;
     var accShareCode = "";
     var accOwner = "";
     for (var i = 1; i < accountsData.length; i++) {
       if (accountsData[i][0] === accId) {
-        rowIndex = i + 1;
+        accRowIdx = i + 1;
         accShareCode = accountsData[i][5];
         accOwner = accountsData[i][6];
         break;
       }
     }
     
-    if (rowIndex !== -1) {
+    if (accRowIdx !== -1) {
       if (accOwner === email) {
-        accountsSheet.deleteRow(rowIndex);
+        // Owner delete: Check if other members are active
         if (accShareCode) {
-          deleteSharesForCode(ss, accShareCode);
+          var otherMembers = [];
+          for (var j = 1; j < sharesData.length; j++) {
+            if (sharesData[j][0] === accShareCode && sharesData[j][1] !== email) {
+              otherMembers.push(sharesData[j][1]);
+            }
+          }
+          if (otherMembers.length > 0) {
+            throw new Error("Cannot delete account: other members (" + otherMembers.join(", ") + ") are still active.");
+          }
         }
-        deleteTransactionsForAccount(ss, accId);
-      } else {
-        if (accShareCode) {
-          deleteShareForUser(ss, accShareCode, email);
-        }
+        cascadeTombstoneTransactions(ss, accId);
       }
     }
   });
+}
+
+function cascadeTombstoneTransactions(ss, accountId) {
+  var txSheet = ss.getSheetByName("transactions");
+  var txData = txSheet.getDataRange().getValues();
+  var txHeaders = txData[0];
+  var accNameColIdx = txHeaders.indexOf("accountName");
+  var accIdColIdx = txHeaders.indexOf("accountId");
+  
+  if (accIdColIdx === -1 || accNameColIdx === -1) return;
+  
+  var now = new Date().getTime();
+  var updatedAtColIdx = txHeaders.indexOf("updatedAt");
+  
+  for (var i = 1; i < txData.length; i++) {
+    if (txData[i][accIdColIdx] === accountId) {
+      txSheet.getRange(i + 1, accNameColIdx + 1).setValue("(Deleted Account)");
+      if (updatedAtColIdx !== -1) {
+        txSheet.getRange(i + 1, updatedAtColIdx + 1).setValue(now);
+      }
+    }
+  }
 }
 
 function deleteSharesForCode(ss, shareCode) {
@@ -473,7 +502,6 @@ function manageBackupTrigger() {
   
   if (isEnabled) {
     if (!trigger) {
-      // Create time-driven trigger daily at 11:30 PM (23:30)
       ScriptApp.newTrigger("runDailyBackup")
         .timeBased()
         .everyDays(1)
@@ -494,7 +522,6 @@ function runDailyBackup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) return;
   
-  // Double-check active preferences before executing backup
   var isEnabled = false;
   var prefSheet = ss.getSheetByName("preferences");
   if (prefSheet) {
@@ -537,19 +564,17 @@ function resetSpreadsheet() {
   if (!ss) return;
   
   var sheetsConfig = {
-    "transactions": ["id", "amount", "type", "categoryId", "categoryName", "accountId", "accountName", "note", "timestamp", "userEmail"],
-    "categories": ["id", "name", "type", "icon", "isDefault", "chartColor", "userEmail"],
-    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail"],
+    "transactions": ["id", "amount", "type", "categoryId", "categoryName", "accountId", "accountName", "note", "timestamp", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
+    "categories": ["id", "name", "type", "icon", "isDefault", "chartColor", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
+    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
     "preferences": ["key", "value", "userEmail"],
     "shares": ["shareCode", "userEmail"],
     "users": ["email", "displayName", "photoUrl", "lastSeen"]
   };
   
-  // 1. Delete standard sheets first (re-creating them clean later)
   var sheets = ss.getSheets();
   sheets.forEach(function(sheet) {
     var name = sheet.getName();
-    // Keep at least one sheet temporarily so we don't delete the last remaining sheet
     if (ss.getSheets().length > 1) {
       try {
         ss.deleteSheet(sheet);
@@ -559,7 +584,6 @@ function resetSpreadsheet() {
     }
   });
   
-  // 2. Re-create all standard sheets with standard headers
   for (var name in sheetsConfig) {
     var sheet = ss.getSheetByName(name);
     if (!sheet) {
@@ -569,7 +593,6 @@ function resetSpreadsheet() {
     sheet.appendRow(sheetsConfig[name]);
   }
   
-  // 3. Delete any remaining backup or non-conforming sheets
   var remainingSheets = ss.getSheets();
   remainingSheets.forEach(function(sheet) {
     var name = sheet.getName();
@@ -582,7 +605,6 @@ function resetSpreadsheet() {
     }
   });
   
-  // 4. Delete all existing triggers
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     ScriptApp.deleteTrigger(triggers[i]);

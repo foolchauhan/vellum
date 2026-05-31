@@ -139,6 +139,8 @@ fun getSettingsIconForName(name: String): ImageVector {
         "reminders" -> Icons.Default.Timer
         "autobackup" -> Icons.Default.Backup
         "passcode" -> Icons.Default.Lock
+        "download" -> Icons.Default.ArrowDownward
+        "upload" -> Icons.Default.ArrowUpward
         else -> Icons.Default.Settings
     }
 }
@@ -150,6 +152,8 @@ fun TransactionRow(
     showNote: Boolean,
     currencySymbol: String = "₹",
     categoryIcon: String = "",
+    categoryName: String = tx.categoryName,
+    accountName: String = tx.accountName,
     isOutlined: Boolean = false,
     onClick: () -> Unit = {},
     onDelete: () -> Unit
@@ -173,17 +177,17 @@ fun TransactionRow(
                 .padding(end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val iconKey = categoryIcon.takeIf { it.isNotEmpty() } ?: tx.categoryName
+            val iconKey = categoryIcon.takeIf { it.isNotEmpty() } ?: categoryName
             Icon(
                 imageVector = getIconForName(iconKey, isOutlined),
-                contentDescription = tx.categoryName,
+                contentDescription = categoryName,
                 tint = ParchmentDarkBrown,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
-                    text = tx.categoryName,
+                    text = categoryName,
                     fontFamily = ParchmentFontFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
@@ -198,7 +202,7 @@ fun TransactionRow(
                     )
                 }
                 Text(
-                    text = "$date | ${tx.accountName}",
+                    text = "$date | $accountName",
                     fontFamily = ParchmentFontFamily,
                     fontSize = 11.sp,
                     color = ParchmentDarkBrown.copy(alpha = 0.5f)

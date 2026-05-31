@@ -290,26 +290,28 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
 
     fun deleteTransaction(transaction: TransactionEntity) {
         viewModelScope.launch {
+            // Track tombstone ID so sync can propagate the delete to the sheet
             val currentDeleted = repository.getPreferenceValue("deleted_transactions") ?: ""
             val deletedList = if (currentDeleted.isEmpty()) mutableListOf() else currentDeleted.split(",").toMutableList()
             if (!deletedList.contains(transaction.id)) {
                 deletedList.add(transaction.id)
                 repository.insertPreference("deleted_transactions", deletedList.joinToString(","))
             }
-            repository.deleteTransaction(transaction)
+            repository.softDeleteTransaction(transaction)
             syncWithSheets()
         }
     }
 
     fun deleteCategory(category: CategoryEntity) {
         viewModelScope.launch {
+            // Track tombstone ID so sync can propagate the delete to the sheet
             val currentDeleted = repository.getPreferenceValue("deleted_categories") ?: ""
             val deletedList = if (currentDeleted.isEmpty()) mutableListOf() else currentDeleted.split(",").toMutableList()
             if (!deletedList.contains(category.id)) {
                 deletedList.add(category.id)
                 repository.insertPreference("deleted_categories", deletedList.joinToString(","))
             }
-            repository.deleteCategory(category)
+            repository.softDeleteCategory(category)
             syncWithSheets()
         }
     }
@@ -322,7 +324,20 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
                 deletedList.add(account.id)
                 repository.insertPreference("deleted_accounts", deletedList.joinToString(","))
             }
-            repository.deleteAccount(account)
+            repository.softDeleteAccount(account)
+            syncWithSheets()
+        }
+    }
+
+    fun leaveSharedAccount(account: AccountEntity) {
+        viewModelScope.launch {
+            val currentLeft = repository.getPreferenceValue("left_accounts") ?: ""
+            val leftList = if (currentLeft.isEmpty()) mutableListOf() else currentLeft.split(",").toMutableList()
+            if (!leftList.contains(account.id)) {
+                leftList.add(account.id)
+                repository.insertPreference("left_accounts", leftList.joinToString(","))
+            }
+            repository.leaveAccount(account)
             syncWithSheets()
         }
     }
@@ -373,6 +388,14 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
             } finally {
                 _isSyncing.value = false
             }
+        }
+    }
+
+    fun bulkUploadTransactions(csvText: String, onCompleted: (success: Int, failure: Int) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.bulkUploadTransactions(csvText)
+            syncWithSheets()
+            onCompleted(result.first, result.second)
         }
     }
 
