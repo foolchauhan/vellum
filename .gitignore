@@ -20,4 +20,5 @@ local.properties
 
 # Built APKs
 *.apk
-/Vellum.apk
+!/Vellum.apk
+!/apks/*.apk
