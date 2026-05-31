@@ -118,3 +118,28 @@ dependencies {
   // Coil Compose for image loading
   implementation("io.coil-kt:coil-compose:2.6.0")
 }
+
+tasks.register("copyReleaseApkToRoot") {
+    val srcFile = layout.buildDirectory.file("outputs/apk/release/Vellum.apk")
+    val destFile = layout.projectDirectory.file("../Vellum.apk")
+
+    inputs.file(srcFile).withPropertyName("sourceApk")
+    outputs.file(destFile).withPropertyName("destinationApk")
+
+    doLast {
+        val src = srcFile.get().asFile
+        val dest = destFile.asFile
+        if (src.exists()) {
+            src.copyTo(dest, overwrite = true)
+            println("Successfully copied Vellum.apk to project root: ${dest.absolutePath}")
+        } else {
+            println("Warning: Release APK not found at ${src.absolutePath}")
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named("assembleRelease") {
+        finalizedBy("copyReleaseApkToRoot")
+    }
+}
