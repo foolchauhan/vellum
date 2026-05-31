@@ -305,3 +305,26 @@ We have refactored all popup dialog forms into dedicated full screens, added cat
 * Restructured vertical `SpendingTab` into a scrollable container with sticky headers and action buttons. Added a **Spending by Category** list showing colored category expense breakdowns for the selected account.
 * Implemented an inline **category color collision resolver** that substitutes duplicate colors from a pool of distinct colors, ensuring active categories have unique colors on both vertical and landscape charts.
 * Increased bottom canvas padding in `BarChartCanvas` to `70.dp` and rotated category labels by `45 degrees` using `withTransform` to resolve text overlapping.
+
+---
+
+## 9. UI Polish, Custom PDF/CSV Exports, and Renamed Release APK (Implemented — Phase 9)
+
+We have polished form accessibility/consistency, introduced customizable CSV and PDF document exports, and automated shareable APK compilation.
+
+### 9.1 UI Consistency & Keyboard Avoidance
+- Modified Navigation flows to pass down `safeDrawingPadding()` to `AddEditTransactionScreen`, `AddEditCategoryScreen`, and `AddEditAccountScreen`.
+- Standardized form boundaries to run within safe app regions (excluding system status and navigation bars).
+- When the soft keyboard opens, the main container's layout shrinks by the IME height, ensuring notes and action buttons at the bottom of forms remain fully viewable and scrollable.
+
+### 9.2 Spending Period Account Context
+- Configured the centered period navigation switcher on the Spending tab to display the active account's name directly below the period label, providing instantaneous context on what data is being graphed.
+
+### 9.3 Custom PDF/CSV Export Engine
+- Implemented `ExportManager.kt` containing robust PDF and CSV generators.
+- PDF Statement Generation: Renders multi-page A4 PDF documents. Features an elegant blackboard background header utilizing the app's real `blackboard_background_01` resource, draws the actual `ic_launcher` app icon, prints active filters metadata, renders grid summary metrics cards, computes category-wise progress bars, and lists transaction tables with green/red formatted amounts and page-numbered footers.
+- Share Settings Dialog: Added filters inside `ShareExportDialog.kt` allowing users to configure accounts, period types, and specific date/week/month/year ranges before running the SAF `CreateDocument` file saving activity. Filenames are constructed dynamically (e.g. `vellum_personal_report_may_2026.pdf`).
+
+### 9.4 Release APK Automation
+- Custom variant rules in `app/build.gradle.kts` output the optimized release package directly as `Vellum.apk`.
+- Configured to use the debug keystore signing config so that friends and family can immediately install it, while avoiding the startup database wipes triggered by `BuildConfig.DEBUG` checks in debug builds.
