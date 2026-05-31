@@ -3,6 +3,23 @@
 > [!NOTE]
 > For active session context, screenshot analysis summary, and implementation checklists, see **[HANDOVER.md](HANDOVER.md)**.
 
+## 📥 Downloads & Releases
+
+Get the latest installable release of Vellum immediately:
+
+*   **[Download Vellum.apk (v1.0.0 - Latest)](https://github.com/foolchauhan/vellum/raw/main/Vellum.apk)**
+    *   *Signed with the debug keystore for easy installation on any Android device.*
+    *   *No automated debug-mode startup database wipes.*
+
+### Previous Versions
+If you need to download older builds:
+
+| Version | Release Date | Download Link |
+|---|---|---|
+| **v1.0.0** (Latest) | 2026-05-31 | [Vellum-1.0.0.apk](https://github.com/foolchauhan/vellum/raw/main/apks/Vellum-1.0.0.apk) |
+
+---
+
 Vellum is a native Android spending tracker app that offers a peaceful, rustic, and chalkboard-style tracking experience. The app is written in Kotlin using Jetpack Compose for UI development, Kotlin Flows for reactive state streaming, and Room SQLite for offline-first local caching.
 
 ---
