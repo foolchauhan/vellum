@@ -30,8 +30,8 @@ This document preserves the current status, codebase architecture, achievements,
 ```
 main                       ← stable production snapshot
 develop                    ← integration branch
-release/release-1.0.0      ← v1.0.0 frozen release snapshot
-feature/sync-reliability-and-conflict-handling   ← active development branch (resuming here)
+release/release-2.0.0      ← v2.0.0 frozen release snapshot
+feature/reminders-and-settings-polish   ← active development branch (resuming here)
 ```
 
 > [!IMPORTANT]
@@ -138,7 +138,8 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
 2. **Branches pushed**:
    - `main` — stable production snapshot (initial commit `d26e5c4`)
    - `develop` — integration branch, synced from main
-   - `release/release-1.0.0` — first release snapshot (frozen at v1.0.0)
+   - `release/release-2.0.0` — v2.0.0 release snapshot (frozen at v2.0.0)
+   - `release/release-1.0.0` — v1.0.0 release snapshot (frozen at v1.0.0)
 3. **Branching workflow documented** in all MD files:
    - [AGENT.md](AGENT.md) — full mandatory workflow (Section 4)
    - [README.md](README.md) — branch structure and quick-start
@@ -186,7 +187,7 @@ Go to → https://github.com/foolchauhan/vellum/settings/branches
 | Gradle compilation | ✅ Clean — `./gradlew assembleDebug` and `./gradlew assembleRelease` succeed |
 | APK assembly | ✅ `Vellum.apk` release build built successfully |
 | Device deployment | ✅ Installed and verified on `192.168.1.5:45011` |
-| GitHub push | ✅ All branches merged locally and pushed (`main`, `develop`, `release/release-1.0.0`, and feature branch) |
+| GitHub push | ✅ All branches merged locally and pushed (`main`, `develop`, `release/release-2.0.0`, and feature branch) |
 | MD documentation | ✅ All project MD files updated with current session milestones |
 
 ---
