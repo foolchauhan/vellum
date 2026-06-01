@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
         AccountEntity::class,
         PreferenceEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class VellumDatabase : RoomDatabase() {
@@ -38,7 +38,7 @@ abstract class VellumDatabase : RoomDatabase() {
                     VellumDatabase::class.java,
                     "vellum.db"
                 )
-                .addMigrations(MIGRATION_3_4)
+                .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
                 .addCallback(DatabaseCallback(context.applicationContext))
                 .build()
                 INSTANCE = instance
@@ -79,6 +79,12 @@ abstract class VellumDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE accounts ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
                 database.execSQL("ALTER TABLE accounts ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0")
                 database.execSQL("ALTER TABLE accounts ADD COLUMN deletedAt INTEGER")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE accounts ADD COLUMN carryOver INTEGER NOT NULL DEFAULT 0")
             }
         }
 

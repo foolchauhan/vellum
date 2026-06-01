@@ -43,6 +43,9 @@ fun SpendingTab(
     val activeAccount by viewModel.selectedFilterAccount.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val timePeriodPref by viewModel.timePeriod.collectAsState()
+
+    val isNavigable = timePeriodPref != "All" && timePeriodPref != "Custom"
 
     val currencySymbol = when (val sym = preferences["currency_symbol"]) {
         "Default" -> "₹"
@@ -142,11 +145,17 @@ fun SpendingTab(
             ) {
                 Text(
                     text = "<",
-                    style = fontStyle.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                    style = fontStyle.copy(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isNavigable) ParchmentDarkBrown else Color.Transparent
+                    ),
                     modifier = Modifier
-                        .clickable {
-                            viewModel.navigatePeriod(false)
-                        }
+                        .then(
+                            if (isNavigable) {
+                                Modifier.clickable { viewModel.navigatePeriod(false) }
+                            } else Modifier
+                        )
                         .padding(horizontal = 24.dp, vertical = 8.dp)
                 )
                 Column(
@@ -166,11 +175,17 @@ fun SpendingTab(
                 }
                 Text(
                     text = ">",
-                    style = fontStyle.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                    style = fontStyle.copy(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isNavigable) ParchmentDarkBrown else Color.Transparent
+                    ),
                     modifier = Modifier
-                        .clickable {
-                            viewModel.navigatePeriod(true)
-                        }
+                        .then(
+                            if (isNavigable) {
+                                Modifier.clickable { viewModel.navigatePeriod(true) }
+                            } else Modifier
+                        )
                         .padding(horizontal = 24.dp, vertical = 8.dp)
                 )
             }
@@ -230,6 +245,23 @@ fun SpendingTab(
                     ) {
                         Text(text = "Expense", style = fontStyle)
                         Text(text = String.format(Locale.US, "%s%.2f", currencySymbol, metrics.totalExpense), style = fontStyle.copy(color = ChalkRed))
+                    }
+
+                    // Carry Over starting balance row (if enabled for the account)
+                    val showCarryOver = activeAccount?.carryOver == true || (activeAccount == null && accounts.any { it.carryOver })
+                    val priorBalance = metrics.balance - (metrics.totalIncome - metrics.totalExpense)
+                    if (showCarryOver && priorBalance != 0.0) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Carry Over", style = fontStyle)
+                            Text(
+                                text = String.format(Locale.US, "%s%.2f", currencySymbol, priorBalance),
+                                style = fontStyle.copy(color = if (priorBalance >= 0) ChalkGreen else ChalkRed)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))

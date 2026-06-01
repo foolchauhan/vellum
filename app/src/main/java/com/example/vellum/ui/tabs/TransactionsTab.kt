@@ -30,6 +30,7 @@ import com.example.vellum.ui.dialogs.FilterCategoryDialog
 import com.example.vellum.ui.dialogs.ShareExportDialog
 import com.example.vellum.ui.main.MainScreenViewModel
 import com.example.vellum.data.local.TransactionEntity
+import androidx.compose.ui.graphics.Color
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +56,8 @@ fun TransactionsTab(
     val accounts by viewModel.accounts.collectAsState()
     val showNote = preferences["show_notes"] != "Off"
     val isOutlined = preferences["category_icon_style"] == "Outlined"
+    val timePeriodPref by viewModel.timePeriod.collectAsState()
+    val isNavigable = timePeriodPref != "All" && timePeriodPref != "Custom"
 
     val currencySymbol = when (val sym = preferences["currency_symbol"]) {
         "Default" -> "₹"
@@ -169,18 +172,24 @@ fun TransactionsTab(
             ) {
                 // Navigation arrows
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { viewModel.navigatePeriod(false) }) {
+                    IconButton(
+                        onClick = { viewModel.navigatePeriod(false) },
+                        enabled = isNavigable
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Prev",
-                            tint = ParchmentDarkBrown
+                            tint = if (isNavigable) ParchmentDarkBrown else Color.Transparent
                         )
                     }
-                    IconButton(onClick = { viewModel.navigatePeriod(true) }) {
+                    IconButton(
+                        onClick = { viewModel.navigatePeriod(true) },
+                        enabled = isNavigable
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowForward,
                             contentDescription = "Next",
-                            tint = ParchmentDarkBrown
+                            tint = if (isNavigable) ParchmentDarkBrown else Color.Transparent
                         )
                     }
                 }

@@ -34,6 +34,7 @@ fun AccountsTab(
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val preferences by viewModel.preferences.collectAsState()
+    val currentUserEmail by viewModel.userEmail.collectAsState()
     val isOutlined = preferences["category_icon_style"] == "Outlined"
     var showJoinDialog by remember { mutableStateOf(false) }
 
@@ -80,6 +81,29 @@ fun AccountsTab(
                                 Text(
                                     text = "Share Code: ${acc.shareCode}",
                                     color = ParchmentBlueText,
+                                    fontFamily = ParchmentFontFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            if (acc.ownerEmail != null && acc.ownerEmail != currentUserEmail) {
+                                Text(
+                                    text = "Owner: ${acc.ownerEmail}",
+                                    color = ParchmentDarkBrown.copy(alpha = 0.8f),
+                                    fontFamily = ParchmentFontFamily,
+                                    fontSize = 12.sp
+                                )
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Carry Over: ",
+                                    color = ParchmentDarkBrown.copy(alpha = 0.8f),
+                                    fontFamily = ParchmentFontFamily,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = if (acc.carryOver) "Enabled" else "Disabled",
+                                    color = if (acc.carryOver) ChalkGreen else ChalkRed,
                                     fontFamily = ParchmentFontFamily,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold

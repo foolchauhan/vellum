@@ -54,7 +54,8 @@ data class AccountEntity(
     val isSynced: Boolean = false,
     val updatedAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val carryOver: Boolean = false
 )
 
 

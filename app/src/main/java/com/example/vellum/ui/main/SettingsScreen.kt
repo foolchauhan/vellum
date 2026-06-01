@@ -19,6 +19,8 @@ import com.example.vellum.ui.components.HorizontalDivider
 import com.example.vellum.ui.components.ParchmentBackground
 import com.example.vellum.ui.components.getSettingsIconForName
 import com.example.vellum.ui.dialogs.SettingsSelectionDialog
+import com.example.vellum.ui.dialogs.ChalkboardDatePickerDialog
+import com.example.vellum.ui.dialogs.AccountCarryOverSettingsDialog
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +33,12 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val preferences by viewModel.preferences.collectAsState()
+    val accounts by viewModel.accounts.collectAsState()
     var activeDialogOption by remember { mutableStateOf<String?>(null) }
+
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+    var tempStartDate by remember { mutableStateOf(System.currentTimeMillis()) }
 
     val createTemplateLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
@@ -75,9 +82,8 @@ fun SettingsScreen(
     }
 
     val dialogData = when(activeDialogOption) {
-        "time_period" -> Pair("Time Period", listOf("Daily", "Weekly", "Monthly", "Yearly"))
+        "time_period" -> Pair("Time Period", listOf("Daily", "Weekly", "Monthly", "Yearly", "All", "Last 6 Months", "Last 1 Year", "Custom"))
         "budget_mode" -> Pair("Budget Mode", listOf("On", "Off"))
-        "carry_over" -> Pair("Carry Over", listOf("On", "Off"))
         "hide_future" -> Pair("Hide Future Transactions", listOf("On", "Off"))
         "dropbox_sync" -> Pair("Dropbox Sync", listOf("On", "Off"))
         "theme" -> Pair("Theme", listOf("Light", "Dark", "System"))
@@ -151,9 +157,10 @@ fun SettingsScreen(
                     }
                 }
                 item {
+                    val enabledCount = accounts.count { it.carryOver }
                     SettingsRow(
                         title = "Carry Over",
-                        value = preferences["carry_over"] ?: "Off",
+                        value = if (enabledCount > 0) "$enabledCount Enabled" else "Off",
                         iconName = "carryover"
                     ) {
                         activeDialogOption = "carry_over"
@@ -298,11 +305,49 @@ fun SettingsScreen(
             },
             onDismiss = { activeDialogOption = null },
             onSelect = { newValue ->
-                viewModel.updatePreference(activeDialogOption!!, newValue)
-                if (activeDialogOption == "time_period") {
-                    viewModel.resetPeriodOffset()
+                if (newValue == "Custom") {
+                    tempStartDate = System.currentTimeMillis()
+                    showStartPicker = true
+                } else {
+                    viewModel.updatePreference(activeDialogOption!!, newValue)
+                    if (activeDialogOption == "time_period") {
+                        viewModel.resetPeriodOffset()
+                    }
                 }
                 activeDialogOption = null
+            }
+        )
+    }
+
+    if (activeDialogOption == "carry_over") {
+        AccountCarryOverSettingsDialog(
+            viewModel = viewModel,
+            onDismiss = { activeDialogOption = null }
+        )
+    }
+
+    if (showStartPicker) {
+        ChalkboardDatePickerDialog(
+            initialTimestamp = tempStartDate,
+            onDismiss = { showStartPicker = false },
+            onDateSelected = { startMs ->
+                tempStartDate = startMs
+                showStartPicker = false
+                showEndPicker = true
+            }
+        )
+    }
+
+    if (showEndPicker) {
+        ChalkboardDatePickerDialog(
+            initialTimestamp = tempStartDate,
+            onDismiss = { showEndPicker = false },
+            onDateSelected = { endMs ->
+                showEndPicker = false
+                viewModel.updatePreference("custom_start_date", tempStartDate.toString())
+                viewModel.updatePreference("custom_end_date", endMs.toString())
+                viewModel.updatePreference("time_period", "Custom")
+                viewModel.resetPeriodOffset()
             }
         )
     }

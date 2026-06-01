@@ -54,6 +54,7 @@ fun AddEditAccountScreen(
     var selectedIconName by remember { mutableStateOf(accountToEdit?.icon ?: "personal") }
     var selectedColorHex by remember { mutableStateOf<String?>(accountToEdit?.color) }
     var isShared by remember { mutableStateOf(accountToEdit?.shareCode != null) }
+    var carryOver by remember { mutableStateOf(accountToEdit?.carryOver ?: false) }
 
     var showIconPickerDialog by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
@@ -147,7 +148,8 @@ fun AddEditAccountScreen(
                                     id = accountToEdit?.id,
                                     isDefault = accountToEdit?.isDefault ?: false,
                                     shareCode = shareCodeVal,
-                                    ownerEmail = ownerEmailVal
+                                    ownerEmail = ownerEmailVal,
+                                    carryOver = carryOver
                                 )
                                 onBack()
                             }
@@ -280,6 +282,31 @@ fun AddEditAccountScreen(
                                 }
                             },
                             enabled = isOwner,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = ParchmentDarkBrown,
+                                checkedTrackColor = ParchmentLine
+                            )
+                        )
+                    }
+                }
+
+                // Carry Over Switch Row
+                FormRow(label = "Carry Over") {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Carry balance to next period",
+                            color = ParchmentDarkBrown,
+                            fontFamily = ParchmentFontFamily,
+                            fontSize = 16.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = carryOver,
+                            onCheckedChange = { carryOver = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = ParchmentDarkBrown,
                                 checkedTrackColor = ParchmentLine
