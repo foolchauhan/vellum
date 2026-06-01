@@ -82,7 +82,7 @@ function setupSheets(ss) {
   var sheetsConfig = {
     "transactions": ["id", "amount", "type", "categoryId", "categoryName", "accountId", "accountName", "note", "timestamp", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
     "categories": ["id", "name", "type", "icon", "isDefault", "chartColor", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
-    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
+    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt", "carryOver"],
     "preferences": ["key", "value", "userEmail"],
     "shares": ["shareCode", "userEmail"],
     "users": ["email", "displayName", "photoUrl", "lastSeen"]
@@ -110,6 +110,13 @@ function setupSheets(ss) {
   manageBackupTrigger();
 }
 
+function upgradeSheetsSchema() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  setupSheets(spreadsheet);
+  Logger.log("Sheets schema upgraded successfully without affecting existing data.");
+}
+
+
 function rowToObject(row, headers) {
   var obj = {};
   headers.forEach(function(header, idx) {
@@ -124,7 +131,7 @@ function rowToObject(row, headers) {
       } else {
         obj[header] = parseFloat(val);
       }
-    } else if (header === "isDefault" || header === "isDeleted") {
+    } else if (header === "isDefault" || header === "isDeleted" || header === "carryOver") {
       obj[header] = (val === true || val === "true" || val === 1 || val === "1");
     } else {
       obj[header] = val;
@@ -566,7 +573,7 @@ function resetSpreadsheet() {
   var sheetsConfig = {
     "transactions": ["id", "amount", "type", "categoryId", "categoryName", "accountId", "accountName", "note", "timestamp", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
     "categories": ["id", "name", "type", "icon", "isDefault", "chartColor", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
-    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt"],
+    "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt", "carryOver"],
     "preferences": ["key", "value", "userEmail"],
     "shares": ["shareCode", "userEmail"],
     "users": ["email", "displayName", "photoUrl", "lastSeen"]

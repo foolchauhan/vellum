@@ -117,17 +117,54 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
     }
 
     // Metrics aggregates for the Spending screen
-    val spendingMetrics = transactions.map { list ->
+    val spendingMetrics = combine(
+        transactions,
+        allTransactions,
+        activePeriodRange,
+        _selectedFilterAccount,
+        accounts
+    ) { currentPeriodList, allList, range, filterAcc, accList ->
         var income = 0.0
         var expense = 0.0
-        list.forEach { tx ->
+        currentPeriodList.forEach { tx ->
             if (tx.type == "INCOME") {
                 income += tx.amount
             } else {
                 expense += tx.amount
             }
         }
-        SpendingMetrics(income, expense, income - expense)
+
+        // Calculate carryover starting balance from prior periods
+        var startingBalance = 0.0
+        if (filterAcc != null) {
+            val acc = accList.find { it.id == filterAcc.id } ?: filterAcc
+            if (acc.carryOver) {
+                allList.forEach { tx ->
+                    if (tx.accountId == acc.id && tx.timestamp < range.first && !tx.isDeleted) {
+                        if (tx.type == "INCOME") {
+                            startingBalance += tx.amount
+                        } else {
+                            startingBalance -= tx.amount
+                        }
+                    }
+                }
+            }
+        } else {
+            val carryOverAccountIds = accList.filter { it.carryOver }.map { it.id }.toSet()
+            if (carryOverAccountIds.isNotEmpty()) {
+                allList.forEach { tx ->
+                    if (tx.accountId in carryOverAccountIds && tx.timestamp < range.first && !tx.isDeleted) {
+                        if (tx.type == "INCOME") {
+                            startingBalance += tx.amount
+                        } else {
+                            startingBalance -= tx.amount
+                        }
+                    }
+                }
+            }
+        }
+
+        SpendingMetrics(income, expense, startingBalance + (income - expense))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -148,6 +185,8 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
     }
 
     fun navigatePeriod(forward: Boolean) {
+        val period = timePeriod.value
+        if (period == "All" || period == "Custom") return
         _currentPeriodOffset.value += if (forward) 1 else -1
     }
 
@@ -256,7 +295,8 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
         id: String? = null,
         isDefault: Boolean = false,
         shareCode: String? = null,
-        ownerEmail: String? = null
+        ownerEmail: String? = null,
+        carryOver: Boolean = false
     ) {
         viewModelScope.launch {
             val acc = if (id != null) {
@@ -269,7 +309,8 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
                     shareCode = shareCode,
                     ownerEmail = ownerEmail,
                     userEmail = _userEmail.value,
-                    isSynced = false
+                    isSynced = false,
+                    carryOver = carryOver
                 )
             } else {
                 AccountEntity(
@@ -280,10 +321,23 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
                     shareCode = shareCode,
                     ownerEmail = ownerEmail,
                     userEmail = _userEmail.value,
-                    isSynced = false
+                    isSynced = false,
+                    carryOver = carryOver
                 )
             }
             repository.insertAccount(acc)
+            syncWithSheets()
+        }
+    }
+
+    fun updateAccountCarryOver(account: AccountEntity, carryOver: Boolean) {
+        viewModelScope.launch {
+            val updated = account.copy(
+                carryOver = carryOver,
+                isSynced = false,
+                updatedAt = System.currentTimeMillis()
+            )
+            repository.insertAccount(updated)
             syncWithSheets()
         }
     }
@@ -489,6 +543,48 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
                 val end = calendar.timeInMillis
                 return Pair(start, end)
             }
+            "All" -> {
+                return Pair(0L, Long.MAX_VALUE)
+            }
+            "Last 6 Months" -> {
+                calendar.add(Calendar.MONTH, offset * 6)
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                calendar.set(Calendar.MILLISECOND, 999)
+                val end = calendar.timeInMillis
+                
+                calendar.add(Calendar.MONTH, -6)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                val start = calendar.timeInMillis
+                return Pair(start, end)
+            }
+            "Last 1 Year" -> {
+                calendar.add(Calendar.YEAR, offset)
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                calendar.set(Calendar.MILLISECOND, 999)
+                val end = calendar.timeInMillis
+                
+                calendar.add(Calendar.YEAR, -1)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                val start = calendar.timeInMillis
+                return Pair(start, end)
+            }
+            "Custom" -> {
+                val startStr = preferences.value["custom_start_date"]
+                val endStr = preferences.value["custom_end_date"]
+                val start = startStr?.toLongOrNull() ?: 0L
+                val end = endStr?.toLongOrNull() ?: Long.MAX_VALUE
+                return Pair(start, end)
+            }
             else -> { // Monthly
                 calendar.add(Calendar.MONTH, offset)
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -530,13 +626,44 @@ class MainScreenViewModel(private val repository: DataRepository) : ViewModel() 
                 val format = SimpleDateFormat("yyyy", Locale.US)
                 return format.format(calendar.time)
             }
+            "All" -> {
+                return "All Time"
+            }
+            "Last 6 Months" -> {
+                val format = SimpleDateFormat("MMM yyyy", Locale.US)
+                calendar.add(Calendar.MONTH, offset * 6)
+                val endStr = format.format(calendar.time)
+                calendar.add(Calendar.MONTH, -6)
+                val startStr = format.format(calendar.time)
+                return "$startStr - $endStr"
+            }
+            "Last 1 Year" -> {
+                val format = SimpleDateFormat("MMM yyyy", Locale.US)
+                calendar.add(Calendar.YEAR, offset)
+                val endStr = format.format(calendar.time)
+                calendar.add(Calendar.YEAR, -1)
+                val startStr = format.format(calendar.time)
+                return "$startStr - $endStr"
+            }
+            "Custom" -> {
+                val startStr = preferences.value["custom_start_date"]
+                val endStr = preferences.value["custom_end_date"]
+                val start = startStr?.toLongOrNull()
+                val end = endStr?.toLongOrNull()
+                if (start != null && end != null) {
+                    val format = SimpleDateFormat("MMM d, yyyy", Locale.US)
+                    val startLabel = format.format(Date(start))
+                    val endLabel = format.format(Date(end))
+                    return "$startLabel - $endLabel"
+                }
+                return "Custom Range"
+            }
             else -> { // Monthly
                 calendar.add(Calendar.MONTH, offset)
                 val format = SimpleDateFormat("MMMM", Locale.US) // e.g. "May"
                 val monthName = format.format(calendar.time)
                 val yearFormat = SimpleDateFormat("yyyy", Locale.US)
                 val year = yearFormat.format(calendar.time)
-                // If current year, just show Month name, else include year (to match screenshot "May")
                 val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
                 return if (year == currentYear) monthName else "$monthName $year"
             }

@@ -74,7 +74,8 @@ object SheetsSyncManager {
                     shareCode = accJson.optString("shareCode"),
                     ownerEmail = accJson.optString("ownerEmail"),
                     userEmail = email,
-                    isSynced = true
+                    isSynced = true,
+                    carryOver = accJson.optBoolean("carryOver", false)
                 )
             }
         } catch (e: Exception) {
@@ -122,7 +123,8 @@ object SheetsSyncManager {
                         isSynced = true,
                         updatedAt = o.optLong("updatedAt", 0L),
                         isDeleted = o.optBoolean("isDeleted", false),
-                        deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt")
+                        deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt"),
+                        carryOver = o.optBoolean("carryOver", false)
                     )
                 )
             }
@@ -201,6 +203,7 @@ object SheetsSyncManager {
                                      local.icon == remote.icon &&
                                      local.color == remote.color &&
                                      local.isDeleted == remote.isDeleted &&
+                                     local.carryOver == remote.carryOver &&
                                      local.updatedAt == remote.updatedAt
                         mergedAccs[local.id] = local.copy(isSynced = isSame)
                     }
@@ -403,6 +406,7 @@ object SheetsSyncManager {
                     o.put("updatedAt", acc.updatedAt)
                     o.put("isDeleted", acc.isDeleted)
                     o.put("deletedAt", acc.deletedAt ?: JSONObject.NULL)
+                    o.put("carryOver", acc.carryOver)
                     accArray.put(o)
                 }
                 requestJson.put("accounts", accArray)
