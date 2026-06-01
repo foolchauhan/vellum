@@ -122,7 +122,6 @@ abstract class VellumDatabase : RoomDatabase() {
                 PreferenceEntity("budget_mode", "Off"),
                 PreferenceEntity("carry_over", "Off"),
                 PreferenceEntity("hide_future", "Off"),
-                PreferenceEntity("dropbox_sync", "Off"),
                 PreferenceEntity("theme", "System"),
                 PreferenceEntity("show_notes", "On"),
                 PreferenceEntity("currency_symbol", "Default"),

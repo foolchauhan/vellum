@@ -40,6 +40,21 @@ fun SettingsScreen(
     var showEndPicker by remember { mutableStateOf(false) }
     var tempStartDate by remember { mutableStateOf(System.currentTimeMillis()) }
 
+    var pendingReminderValue by remember { mutableStateOf<String?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            pendingReminderValue?.let { value ->
+                viewModel.updatePreference("reminders", value)
+                com.example.vellum.data.ReminderScheduler.scheduleReminder(context, value)
+            }
+        } else {
+            android.widget.Toast.makeText(context, "Notification permission is required for reminders", android.widget.Toast.LENGTH_LONG).show()
+        }
+        pendingReminderValue = null
+    }
+
     val createTemplateLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
@@ -85,7 +100,6 @@ fun SettingsScreen(
         "time_period" -> Pair("Time Period", listOf("Daily", "Weekly", "Monthly", "Yearly", "All", "Last 6 Months", "Last 1 Year", "Custom"))
         "budget_mode" -> Pair("Budget Mode", listOf("On", "Off"))
         "hide_future" -> Pair("Hide Future Transactions", listOf("On", "Off"))
-        "dropbox_sync" -> Pair("Dropbox Sync", listOf("On", "Off"))
         "theme" -> Pair("Theme", listOf("Light", "Dark", "System"))
         "show_notes" -> Pair("Show Transaction Note", listOf("On", "Off"))
         "currency_symbol" -> Pair("Currency Symbol", listOf("Default", "$", "₹", "€", "£"))
@@ -94,7 +108,6 @@ fun SettingsScreen(
         "tabs_position" -> Pair("Tabs Position", listOf("Top", "Bottom"))
         "reminders" -> Pair("Reminders", listOf("Off", "Daily", "Every Week", "Monthly"))
         "auto_backup" -> Pair("Auto Backup", listOf("On", "Off"))
-        "passcode" -> Pair("Passcode", listOf("On", "Off"))
         else -> null
     }
 
@@ -258,10 +271,10 @@ fun SettingsScreen(
                 item {
                     SettingsRow(
                         title = "Passcode",
-                        value = preferences["passcode"] ?: "Off",
+                        value = "Coming Soon",
                         iconName = "passcode"
                     ) {
-                        activeDialogOption = "passcode"
+                        android.widget.Toast.makeText(context, "Passcode feature is coming soon!", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -309,9 +322,31 @@ fun SettingsScreen(
                     tempStartDate = System.currentTimeMillis()
                     showStartPicker = true
                 } else {
-                    viewModel.updatePreference(activeDialogOption!!, newValue)
-                    if (activeDialogOption == "time_period") {
-                        viewModel.resetPeriodOffset()
+                    if (activeDialogOption == "reminders" && newValue != "Off") {
+                        if (android.os.Build.VERSION.SDK_INT >= 33) {
+                            val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                                context,
+                                android.Manifest.permission.POST_NOTIFICATIONS
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                            if (!hasPermission) {
+                                pendingReminderValue = newValue
+                                permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                viewModel.updatePreference("reminders", newValue)
+                                com.example.vellum.data.ReminderScheduler.scheduleReminder(context, newValue)
+                            }
+                        } else {
+                            viewModel.updatePreference("reminders", newValue)
+                            com.example.vellum.data.ReminderScheduler.scheduleReminder(context, newValue)
+                        }
+                    } else {
+                        viewModel.updatePreference(activeDialogOption!!, newValue)
+                        if (activeDialogOption == "time_period") {
+                            viewModel.resetPeriodOffset()
+                        } else if (activeDialogOption == "reminders" && newValue == "Off") {
+                            com.example.vellum.data.ReminderScheduler.scheduleReminder(context, "Off")
+                        }
                     }
                 }
                 activeDialogOption = null
