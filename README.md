@@ -7,7 +7,7 @@
 
 Get the latest installable release of Vellum immediately:
 
-*   **[Download Vellum.apk (v1.0.0 - Latest)](https://github.com/foolchauhan/vellum/raw/main/Vellum.apk)**
+*   **[Download Vellum.apk (v2.0.0 - Latest)](https://github.com/foolchauhan/vellum/raw/main/Vellum.apk)**
     *   *Signed with the debug keystore for easy installation on any Android device.*
     *   *No automated debug-mode startup database wipes.*
 
@@ -16,7 +16,8 @@ If you need to download older builds:
 
 | Version | Release Date | Download Link |
 |---|---|---|
-| **v1.0.0** (Latest) | 2026-05-31 | [Vellum-1.0.0.apk](https://github.com/foolchauhan/vellum/raw/main/apks/Vellum-1.0.0.apk) |
+| **v2.0.0** (Latest) | 2026-06-01 | [Vellum-2.0.0.apk](https://github.com/foolchauhan/vellum/raw/main/apks/Vellum-2.0.0.apk) |
+| **v1.0.0** | 2026-05-31 | [Vellum-1.0.0.apk](https://github.com/foolchauhan/vellum/raw/main/apks/Vellum-1.0.0.apk) |
 
 ---
 
@@ -120,6 +121,7 @@ android run --device=Pixel_4_XL_API_29
 
 ```
 main                              ← stable, production-ready
+├── release/release-2.0.0        ← v2.0.0 frozen snapshot
 ├── release/release-1.0.0        ← v1.0.0 frozen snapshot
 ├── release/release-x.y.z        ← future release snapshots
 └── develop                      ← active integration branch

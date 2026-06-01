@@ -104,19 +104,19 @@ Then on GitHub:
 
 ```bash
 # 1. Create an integration branch from the RELEASE branch (not develop)
-git checkout release/release-1.0.0
-git pull origin release/release-1.0.0
-git checkout -b feature/sync-release-1.0.0-from-develop
+git checkout release/release-2.0.0
+git pull origin release/release-2.0.0
+git checkout -b feature/sync-release-2.0.0-from-develop
 
 # 2. Bring in changes from develop
 git merge origin/develop
 
 # 3. Resolve any conflicts, then push
-git push -u origin feature/sync-release-1.0.0-from-develop
+git push -u origin feature/sync-release-2.0.0-from-develop
 ```
 
 Then on GitHub:
-1. Open a **Pull Request**: `feature/sync-release-1.0.0-from-develop` → `release/release-1.0.0`
+1. Open a **Pull Request**: `feature/sync-release-2.0.0-from-develop` → `release/release-2.0.0`
 2. Review all diffs carefully — this is a release gate
 3. Wait for **PR approval**
 4. Merge into the release branch
