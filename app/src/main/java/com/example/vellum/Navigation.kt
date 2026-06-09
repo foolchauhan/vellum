@@ -18,9 +18,21 @@ import com.example.vellum.ui.main.AddEditAccountScreen
 import com.example.vellum.ui.components.ParchmentBackground
 
 @Composable
-fun MainNavigation(repository: DataRepository) {
+fun MainNavigation(
+    repository: DataRepository,
+    initialQuickAddCategory: String? = null,
+    onQuickAddHandled: () -> Unit = {}
+) {
     val backStack = rememberNavBackStack(Main)
     val sharedViewModel: MainScreenViewModel = viewModel { MainScreenViewModel(repository) }
+
+    // Handle Quick Add intent trigger
+    androidx.compose.runtime.LaunchedEffect(initialQuickAddCategory) {
+        initialQuickAddCategory?.let { category ->
+            backStack.add(AddEditTransaction(preselectedCategoryName = category))
+            onQuickAddHandled()
+        }
+    }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -29,7 +41,8 @@ fun MainNavigation(repository: DataRepository) {
             sharedViewModel.signIn(
                 account.email!!,
                 account.displayName,
-                account.photoUrl?.toString()
+                account.photoUrl?.toString(),
+                isRestore = true
             )
         }
     }
@@ -59,6 +72,7 @@ fun MainNavigation(repository: DataRepository) {
                     viewModel = sharedViewModel,
                     predefinedType = key.predefinedType,
                     transactionId = key.transactionId,
+                    preselectedCategoryName = key.preselectedCategoryName,
                     onBack = { backStack.removeLastOrNull() },
                     onNavigate = { navKey -> backStack.add(navKey) },
                     modifier = Modifier.safeDrawingPadding()

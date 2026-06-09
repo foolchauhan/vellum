@@ -81,17 +81,19 @@ Merge priority order (highest wins):
 - An account that has linked transactions is **never hard-deleted** from the sheet. It is tombstoned (`isDeleted=true`) so dangling `accountId` references in transactions resolve gracefully.
 - Before allowing an owner delete, the Apps Script checks the `shares` tab. If other members are still active, the delete is blocked and an error is returned.
 
-### Known Sync Gaps (Planned Fixes — see Section 7)
+### Resolved Sync Gaps & Issues (Implemented in v2.0.0)
 
-| Gap | Affected File(s) | Risk |
-|-----|-----------------|------|
-| Non-owner "Leave" and owner "Delete" call the same `deleteAccount` path — no logic branching | `AddAccountDialog.kt`, `MainScreenViewModel.kt` | 🔴 High |
-| `deleteAccount` cascades and hard-deletes all linked transactions — including for non-owners leaving | `DataRepository.kt` | 🔴 High |
-| `deleted_accounts` tombstone strings are wiped by `clearLocalCache()` on sign-out | `DataRepository.kt` | 🔴 High |
-| No `updatedAt` column on any entity — edit conflicts resolved by last-sync-wins (not LWW) | `Entities.kt` | 🟡 Medium |
-| No `isDeleted` tombstone column — deletes tracked only via preference strings | `Entities.kt` | 🟡 Medium |
-| Apps Script does append (not upsert) on POST — partial sync retry creates duplicate sheet rows | `Code.gs` | 🔴 High |
-| Orphaned `accountId` in transactions shows blank/crash if account row deleted between syncs | All transaction display composables | 🟡 Medium |
+All previously identified sync gaps and conflict handling limitations have been fully resolved:
+
+| Resolved Gap | Resolution Details | Status |
+| :--- | :--- | :--- |
+| Non-owner "Leave" vs Owner "Delete" logic | Branched UI flow in account screen: owners delete the account (tombstoned), non-owners leave (removing local record only). | ✅ Resolved |
+| Cascade hard-deletes for non-owners | Non-owners leaving calls `leaveAccount` which preserves transactions on remote sheet. | ✅ Resolved |
+| Tombstone cleanups on sign-out | Switched from local temp preferences to durable `isDeleted` DB columns. | ✅ Resolved |
+| No `updatedAt` for LWW conflicts | Added `updatedAt` epoch millisecond timestamps to all primary entities. | ✅ Resolved |
+| No `isDeleted` tombstones | Added `isDeleted` and `deletedAt` DB columns for clean soft-delete synchronization. | ✅ Resolved |
+| Appends causing duplicates | App Script backend rewritten to use idempotent upserts by UUID. | ✅ Resolved |
+| Orphaned `accountId` UI bugs | Dynamic display-time joins fallback to cached name or "(Deleted Account)" safely. | ✅ Resolved |
 
 ---
 
@@ -115,6 +117,10 @@ Stores the ledger transaction entries.
 | `timestamp` | INTEGER | Time of transaction (epoch ms) |
 | `userEmail` | TEXT | Creator email address (nullable) |
 | `isSynced` | INTEGER (Boolean) | Synchronization status flag |
+| `updatedAt` | INTEGER | Last-Write-Wins (LWW) timestamp (epoch ms) |
+| `isDeleted` | INTEGER (Boolean) | Soft-delete tombstone flag |
+| `deletedAt` | INTEGER | Deletion timestamp (epoch ms, nullable) |
+| `splits` | TEXT | Serialized JSON array of TransactionSplit items |
 
 ### 2. `categories` (CategoryEntity)
 Stores categories. It is pre-populated with defaults.
@@ -129,6 +135,10 @@ Stores categories. It is pre-populated with defaults.
 | `chartColor` | TEXT | Hex color string |
 | `userEmail` | TEXT | Creator email address (nullable) |
 | `isSynced` | INTEGER (Boolean) | Synchronization status flag |
+| `updatedAt` | INTEGER | Last-Write-Wins (LWW) timestamp (epoch ms) |
+| `isDeleted` | INTEGER (Boolean) | Soft-delete tombstone flag |
+| `deletedAt` | INTEGER | Deletion timestamp (epoch ms, nullable) |
+| `budget` | REAL | Budget limit for Expense categories |
 
 ### 3. `accounts` (AccountEntity)
 Stores active user/household accounts.
@@ -144,6 +154,10 @@ Stores active user/household accounts.
 | `ownerEmail` | TEXT | Creator owner email address (nullable) |
 | `userEmail` | TEXT | Associated user email address (nullable) |
 | `isSynced` | INTEGER (Boolean) | Synchronization status flag |
+| `updatedAt` | INTEGER | Last-Write-Wins (LWW) timestamp (epoch ms) |
+| `isDeleted` | INTEGER (Boolean) | Soft-delete tombstone flag |
+| `deletedAt` | INTEGER | Deletion timestamp (epoch ms, nullable) |
+| `carryOver` | INTEGER (Boolean) | Carry balance over between periods |
 
 ### 4. `preferences` (PreferenceEntity)
 Stores persistent settings preferences.
@@ -175,11 +189,12 @@ The application dynamically renders two distinct themes matching the visual styl
 * **Lines / Borders**: Dashed chalk-drawn borders and separators using dark gray (`#8B8C8D`).
 
 ### C. Landscape Reports (Chalkboard Canvas charts)
-* **Orientation Redirect**: When the device orientation shifts to landscape, the application redirects the user to the `LandscapeReports` dashboard.
+* **Orientation Redirect**: When the device orientation shifts to landscape, the application redirects the user to the [LandscapeReports.kt](app/src/main/java/com/example/vellum/ui/main/LandscapeReports.kt) dashboard.
+* **Account-Level Filtering**: When any account filter is selected on the main screen, the landscape dashboard automatically displays charts and cash flows filtered specifically to that account.
 * **Canvas Charts**:
-  - **Pie Chart**: Visualizes categories of expense distributions.
-  - **Bar Chart**: Groups categories in a paginated bar chart (5 items per page) with centered layout and a clean baseline, using top-left page selectors (`-` and `+`).
-  - **Cash Flow Line Chart**: Offers selector options (`D`, `W`, `M`, `Y`) to graph Income vs Expense over Daily, Weekly, Monthly, or Yearly intervals.
+  - **Pie Chart**: Visualizes categories of expense distributions for the filtered account.
+  - **Bar Chart**: Draws all active category expense bars side-by-side. The container dynamically calculates width and supports smooth horizontal scrolling if the categories exceed the screen width. Category labels are rotated 45 degrees to avoid overlapping.
+  - **Cash Flow Line Chart**: Offers selector options (`D`, `W`, `M`, `Y`) to graph Income vs Expense over Daily, Weekly, Monthly, or Yearly intervals over the last 12 periods.
 * **Layout Constraints**: The landscape reports utilize the screen's safe boundaries, preserving the default system status and navigation bar visibility.
 
 ---
@@ -328,3 +343,56 @@ We have polished form accessibility/consistency, introduced customizable CSV and
 ### 9.4 Release APK Automation
 - Custom variant rules in `app/build.gradle.kts` output the optimized release package directly as `Vellum.apk`.
 - Configured to use the debug keystore signing config so that friends and family can immediately install it, while avoiding the startup database wipes triggered by `BuildConfig.DEBUG` checks in debug builds.
+
+---
+
+## 10. Vellum Version 2.0.0 Release (Implemented — Phase 10)
+
+We have successfully released Vellum Version 2.0.0 on the `feature/version-2.0.0` branch, introducing classroom themes, count-up animations, eraser wipes, split transactions, biometric lock screen, OCR scanning, AI categorization, visual conflict UI, offline indicators, home screen widgets, and multi-app side-by-side deployment.
+
+### 10.1 Schema & Migrations — `VellumDatabase.kt` (Room DB Migration Version 5 → 6)
+* Added columns:
+  * `budget` (`Double`): Remaining expense limits on `CategoryEntity` (default `0.0`).
+  * `splits` (`String`): JSON array of serialized split transaction objects on `TransactionEntity` (default `""`).
+* Registered `MIGRATION_5_6` executing the `ALTER TABLE` schema expansion statements.
+
+### 10.2 Envelope Budgeting & Split Transactions
+* Added a **Budget Limit** input field in the Category screen for expense categories.
+* Spending Tab draws hand-drawn chalk-style progress bars showing depleted/remaining envelopes.
+* Integrated a **Split Categories/Accounts** form inside the transaction screen, serializing sub-transactions as JSON arrays inside the main transaction record.
+* Updated `spendingMetrics` and combine flows to accurately calculate total income/expense/balance using transaction sub-splits.
+
+### 10.3 Biometric Security & ML Kit OCR Scanner
+* Configured settings-controlled FaceID/Fingerprint lock on startup, showing a beautiful custom chalkboard lock screen overlay if biometric lock is turned on.
+* Integrated **Scan Receipt** OCR engine in transaction form. It uses ML Kit text recognition to process receipt text and populate the largest parsed price heuristically.
+* Integrated notes-keyword AI rule categorization that matches keywords to auto-select categories.
+
+### 10.4 Conflict Resolution & Offline Sync Visualizer
+* Implemented visual **Sync Conflict Dialog** comparing local versus remote transactions side-by-side. It lets the user keep the local or cloud version.
+* Implemented a topbar **Offline Sync Queue** indicator. It draws a chalk-drawn cloud icon displaying the number of pending unsynced records dynamically.
+
+### 10.5 Chalkboard Widgets & Side-by-Side Deployment
+* Added `ChalkboardWidgetProvider` rendering Today's Spend and Current Balance onto a chalkboard canvas bitmap, updating automatically in real-time.
+* Configured debug variant with package suffix `.v2` and manifest placeholder appName `"Vellum 2.0"` to deploy alongside the stable version.
+
+---
+
+## 11. Vellum Usability, AI Semantic Search, and Visual Polish (Implemented — Phase 12)
+
+We have implemented visual optimizations, extended the available set of icons, added a concept-based natural language search engine, and improved navigation and layout behavior.
+
+### 11.1 On-Device Concept Semantic Matcher
+* Introduced [SemanticMatcher.kt](app/src/main/java/com/example/vellum/data/SemanticMatcher.kt), a lightweight concept-matching engine mapping transaction queries to 5 specific financial dimensions (Food, transport, shopping, income, utilities).
+* Queries split search phrases, average vector weights, compute cosine similarity, and resolve semantic searches.
+* Integrates inside [TransactionsTab.kt](app/src/main/java/com/example/vellum/ui/tabs/TransactionsTab.kt) and parses natural language questions (e.g., "how much did I spend on food") with direct summary statistics (sum, average, count, balance).
+
+### 11.2 Massive Icon Library Expansion & Scrollable Layouts
+* Upgraded the icon set in [TransactionRow.kt](app/src/main/java/com/example/vellum/ui/components/TransactionRow.kt) to include over 80 custom expense, income, and account icons.
+* Wrapped the category and account icon selection grids inside [AddEditCategoryScreen.kt](app/src/main/java/com/example/vellum/ui/main/AddEditCategoryScreen.kt) and [AddEditAccountScreen.kt](app/src/main/java/com/example/vellum/ui/main/AddEditAccountScreen.kt) in a scrollable Box with a maximum height of `300.dp`. This resolves vertical page overflows and keeps action forms compact.
+
+### 11.3 Layout Polish & Spacing Optimizations
+* **Landing Page redirection**: Initialized pager state to page index `1` inside [MainScreen.kt](app/src/main/java/com/example/vellum/ui/main/MainScreen.kt) to boot the application directly into the **Spending** tab.
+* **Financial Tutor Card Compact Layout**: Optimized left-side spacing on the Tutor Card in [SpendingTab.kt](app/src/main/java/com/example/vellum/ui/tabs/SpendingTab.kt). Shrinks the canvas drawing boundaries of the tutor owl from `56.dp` to `36.dp` and utilizes `withTransform` scale modifiers to scale vector coordinates dynamically, freeing up a significant amount of screen width for the text blocks.
+* **Filter State Persistence**: Modified [Navigation.kt](app/src/main/java/com/example/vellum/Navigation.kt) and [MainScreenViewModel.kt](app/src/main/java/com/example/vellum/ui/main/MainScreenViewModel.kt) sign-in flows to pass `isRestore = true` and preserve selected account and category filters across screen rotation, avoiding default reset behavior.
+
+

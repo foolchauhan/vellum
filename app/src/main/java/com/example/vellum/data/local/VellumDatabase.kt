@@ -15,9 +15,10 @@ import kotlinx.coroutines.launch
         TransactionEntity::class,
         CategoryEntity::class,
         AccountEntity::class,
-        PreferenceEntity::class
+        PreferenceEntity::class,
+        StickyNoteEntity::class
     ],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 abstract class VellumDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class VellumDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun accountDao(): AccountDao
     abstract fun preferenceDao(): PreferenceDao
+    abstract fun stickyNoteDao(): StickyNoteDao
 
     companion object {
         @Volatile
@@ -38,7 +40,7 @@ abstract class VellumDatabase : RoomDatabase() {
                     VellumDatabase::class.java,
                     "vellum.db"
                 )
-                .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .addCallback(DatabaseCallback(context.applicationContext))
                 .build()
                 INSTANCE = instance
@@ -88,6 +90,31 @@ abstract class VellumDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE categories ADD COLUMN budget REAL NOT NULL DEFAULT 0.0")
+                database.execSQL("ALTER TABLE transactions ADD COLUMN splits TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `sticky_notes` (" +
+                    "`id` TEXT NOT NULL PRIMARY KEY, " +
+                    "`content` TEXT NOT NULL, " +
+                    "`colorHex` TEXT NOT NULL, " +
+                    "`createdAt` INTEGER NOT NULL, " +
+                    "`userEmail` TEXT, " +
+                    "`isSynced` INTEGER NOT NULL DEFAULT 0, " +
+                    "`updatedAt` INTEGER NOT NULL DEFAULT 0, " +
+                    "`isDeleted` INTEGER NOT NULL DEFAULT 0, " +
+                    "`deletedAt` INTEGER" +
+                    ")"
+                )
+            }
+        }
+
         suspend fun prepopulateDatabase(db: VellumDatabase) {
             // Seed Default Categories (Expense)
             val expenseCategories = listOf(
@@ -129,7 +156,9 @@ abstract class VellumDatabase : RoomDatabase() {
                 PreferenceEntity("tabs_position", "Top"),
                 PreferenceEntity("reminders", "Every Week"),
                 PreferenceEntity("auto_backup", "Off"),
-                PreferenceEntity("passcode", "Off")
+                PreferenceEntity("passcode", "Off"),
+                PreferenceEntity("handwriting_style", "Default"),
+                PreferenceEntity("biometric_lock", "Off")
             )
             for (pref in defaultPrefs) {
                 db.preferenceDao().insertPreference(pref)

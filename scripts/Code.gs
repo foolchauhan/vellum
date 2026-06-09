@@ -85,7 +85,8 @@ function setupSheets(ss) {
     "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt", "carryOver"],
     "preferences": ["key", "value", "userEmail"],
     "shares": ["shareCode", "userEmail"],
-    "users": ["email", "displayName", "photoUrl", "lastSeen"]
+    "users": ["email", "displayName", "photoUrl", "lastSeen"],
+    "sticky_notes": ["id", "content", "colorHex", "createdAt", "userEmail", "updatedAt", "isDeleted", "deletedAt"]
   };
   
   for (var name in sheetsConfig) {
@@ -214,14 +215,16 @@ function getSyncData(ss, email) {
     }
   }
   
-  var prefSheet = ss.getSheetByName("preferences");
-  var prefData = prefSheet.getDataRange().getValues();
-  var prefHeaders = prefData[0];
-  var prefList = [];
-  for (var i = 1; i < prefData.length; i++) {
-    var obj = rowToObject(prefData[i], prefHeaders);
-    if (obj.userEmail === email) {
-      prefList.push(obj);
+  var notesSheet = ss.getSheetByName("sticky_notes");
+  var notesList = [];
+  if (notesSheet) {
+    var notesData = notesSheet.getDataRange().getValues();
+    var notesHeaders = notesData[0];
+    for (var i = 1; i < notesData.length; i++) {
+      var obj = rowToObject(notesData[i], notesHeaders);
+      if (obj.userEmail === email) {
+        notesList.push(obj);
+      }
     }
   }
   
@@ -229,7 +232,8 @@ function getSyncData(ss, email) {
     transactions: txList,
     categories: catList,
     accounts: accountsList,
-    preferences: prefList
+    preferences: prefList,
+    sticky_notes: notesList
   };
 }
 
@@ -238,6 +242,12 @@ function saveSyncData(ss, email, data) {
   if (data.categories) upsertRows(ss.getSheetByName("categories"), data.categories, 0, "categories", email);
   if (data.accounts) upsertRows(ss.getSheetByName("accounts"), data.accounts, 0, "accounts", email);
   if (data.preferences) upsertRows(ss.getSheetByName("preferences"), data.preferences, 0, "preferences", email);
+  if (data.sticky_notes) {
+    var notesSheet = ss.getSheetByName("sticky_notes");
+    if (notesSheet) {
+      upsertRows(notesSheet, data.sticky_notes, 0, "sticky_notes", email);
+    }
+  }
 }
 
 function upsertRows(sheet, items, idColIndex, sheetName, email) {
@@ -546,7 +556,7 @@ function runDailyBackup() {
     return;
   }
   
-  var sheets = ["transactions", "categories", "accounts", "preferences", "shares", "users"];
+  var sheets = ["transactions", "categories", "accounts", "preferences", "shares", "users", "sticky_notes"];
   sheets.forEach(function(sheetName) {
     var originalSheet = ss.getSheetByName(sheetName);
     if (!originalSheet) return;
@@ -576,7 +586,8 @@ function resetSpreadsheet() {
     "accounts": ["id", "name", "icon", "isDefault", "color", "shareCode", "ownerEmail", "userEmail", "updatedAt", "isDeleted", "deletedAt", "carryOver"],
     "preferences": ["key", "value", "userEmail"],
     "shares": ["shareCode", "userEmail"],
-    "users": ["email", "displayName", "photoUrl", "lastSeen"]
+    "users": ["email", "displayName", "photoUrl", "lastSeen"],
+    "sticky_notes": ["id", "content", "colorHex", "createdAt", "userEmail", "updatedAt", "isDeleted", "deletedAt"]
   };
   
   var sheets = ss.getSheets();

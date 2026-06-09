@@ -27,6 +27,10 @@ import androidx.compose.ui.text.drawText
 import com.example.vellum.theme.*
 import com.example.vellum.ui.components.ChalkboardBackground
 import com.example.vellum.data.local.TransactionEntity
+import com.example.vellum.data.local.TransactionSplit
+import kotlinx.serialization.json.Json
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import java.util.*
 
 data class PieSlice(val name: String, val amount: Double, val color: Color)
@@ -43,16 +47,13 @@ fun LandscapeReports(
     val periodLabel by viewModel.periodLabel.collectAsState()
     val preferences by viewModel.preferences.collectAsState()
 
+    val selectedFilterAccount by viewModel.selectedFilterAccount.collectAsState()
+
     var isPercentageMode by remember { mutableStateOf(false) }
     var reportType by remember { mutableStateOf("Categories") } // "Categories", "Cash Flow"
     var chartType by remember { mutableStateOf("Pie") } // "Pie", "Bar"
 
-    var barChartPage by remember { mutableStateOf(0) }
     var cashFlowInterval by remember { mutableStateOf("Monthly") } // "Daily", "Weekly", "Monthly", "Yearly"
-
-    LaunchedEffect(periodLabel, chartType, reportType) {
-        barChartPage = 0
-    }
 
     val textMeasurer = rememberTextMeasurer()
 
@@ -115,8 +116,16 @@ fun LandscapeReports(
         }
     }
 
-    val maxPage = (slices.size - 1).coerceAtLeast(0) / 5
-    val visibleSlices = slices.drop(barChartPage * 5).take(5)
+    val filteredAllTransactions = remember(allTransactions, selectedFilterAccount) {
+        if (selectedFilterAccount == null) {
+            allTransactions
+        } else {
+            val accountId = selectedFilterAccount!!.id
+            allTransactions.filter { tx ->
+                tx.accountId == accountId || getSplitsList(tx.splits).any { it.accountId == accountId }
+            }
+        }
+    }
 
     val currencySymbol = when (val sym = preferences["currency_symbol"]) {
         "Default" -> "₹"
@@ -143,17 +152,10 @@ fun LandscapeReports(
                 // Top-Left: Navigation buttons or Title
                 Box(modifier = Modifier.width(160.dp), contentAlignment = Alignment.CenterStart) {
                     if (reportType == "Categories") {
-                        if (chartType == "Bar") {
-                            ChalkActionButtons(
-                                onMinusClick = { if (barChartPage > 0) barChartPage-- },
-                                onPlusClick = { if (barChartPage < maxPage) barChartPage++ }
-                            )
-                        } else {
-                            ChalkActionButtons(
-                                onMinusClick = { viewModel.navigatePeriod(false) },
-                                onPlusClick = { viewModel.navigatePeriod(true) }
-                            )
-                        }
+                        ChalkActionButtons(
+                            onMinusClick = { viewModel.navigatePeriod(false) },
+                            onPlusClick = { viewModel.navigatePeriod(true) }
+                        )
                     } else {
                         // Cash Flow: Interval Toggle
                         ChalkToggle(
@@ -185,7 +187,7 @@ fun LandscapeReports(
                     modifier = Modifier.weight(1f)
                 ) {
                     if (reportType == "Categories") {
-                        val legendSlices = if (chartType == "Bar") visibleSlices else slices.take(4)
+                        val legendSlices = slices.take(4)
                         legendSlices.forEach { slice ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
@@ -311,20 +313,45 @@ fun LandscapeReports(
                                     modifier = Modifier.size(220.dp)
                                 )
                             } else {
-                                BarChartCanvas(
-                                    slices = visibleSlices,
-                                    totalExpense = totalExpense,
-                                    isPercentageMode = isPercentageMode,
-                                    textMeasurer = textMeasurer,
-                                    currencySymbol = currencySymbol,
-                                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 24.dp)
-                                )
+                                BoxWithConstraints(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 16.dp, vertical = 24.dp)
+                                ) {
+                                    val parentWidth = maxWidth
+                                    val count = slices.size
+                                    val barWidth = 36.dp
+                                    val spacing = 16.dp
+                                    val horizontalPadding = 16.dp
+                                    val requiredWidth = (count * (barWidth.value + spacing.value) - spacing.value + (horizontalPadding.value * 2)).dp
+                                    
+                                    val scrollState = rememberScrollState()
+                                    val isScrollable = requiredWidth > parentWidth
+                                    val contentModifier = if (isScrollable) {
+                                        Modifier
+                                            .width(requiredWidth)
+                                            .horizontalScroll(scrollState)
+                                    } else {
+                                        Modifier.fillMaxWidth()
+                                    }
+                                    
+                                    Box(modifier = contentModifier) {
+                                        BarChartCanvas(
+                                            slices = slices,
+                                            totalExpense = totalExpense,
+                                            isPercentageMode = isPercentageMode,
+                                            textMeasurer = textMeasurer,
+                                            currencySymbol = currencySymbol,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
+                                }
                             }
                         }
                     } else {
                         // Cash Flow Chart
-                        val cashFlowData = remember(allTransactions, cashFlowInterval) {
-                            calculateCashFlowData(allTransactions, cashFlowInterval)
+                        val cashFlowData = remember(filteredAllTransactions, cashFlowInterval) {
+                            calculateCashFlowData(filteredAllTransactions, cashFlowInterval)
                         }
                         CashFlowLineChartCanvas(
                             data = cashFlowData,
@@ -853,3 +880,13 @@ private fun calculateCashFlowData(
     }
     return result
 }
+
+private fun getSplitsList(splitsJson: String): List<TransactionSplit> {
+    if (splitsJson.isEmpty()) return emptyList()
+    return try {
+        Json.decodeFromString(splitsJson)
+    } catch (e: Exception) {
+        emptyList()
+    }
+}
+

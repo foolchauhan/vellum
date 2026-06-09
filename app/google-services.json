@@ -41,6 +41,43 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:688785211099:android:63f8f706efcaf60662d6fe",
+        "android_client_info": {
+          "package_name": "com.example.vellum.v2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "688785211099-7ci0ulta740m3g2f905rl1p58ic92p8c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vellum.v2",
+            "certificate_hash": "b097336b729cd145a90d8bd6b91752580d9125d7"
+          }
+        },
+        {
+          "client_id": "688785211099-5v9rfbti9mnoenhfc49us4mk1321nade.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZfkdw-7hWaxBzj0WtzsSOdxpY54tQhcc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "688785211099-5v9rfbti9mnoenhfc49us4mk1321nade.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

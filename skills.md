@@ -14,6 +14,8 @@ The implementation of Vellum leverages specific advanced engineering methodologi
 *   **Declarative Interface Components**: Defining reusable Compose elements with state hoisting and preview support.
 *   **Custom Layout Theme Drawing**: Drawing realistic chalkboard slate (charcoal shade with grain details) and parchment paper (cream beige shade with outline borders) using canvas modifiers, custom shape drawings, and Google Fonts.
 *   **Segmented Bars**: Creating progress layouts with custom Canvas draws representing income relative to expenses.
+*   **Dynamic Canvas Coordinate Scaling**: Utilizing `withTransform` and `scale` blocks inside Jetpack Compose `Canvas` drawing scopes to scale vector components and complex shapes dynamically depending on current layouts.
+*   **Scrollable Custom Charting**: Designing horizontally scrollable custom canvas charts (e.g., bar graphs displaying dozens of categories side-by-side) with 45-degree rotated label boundaries.
 
 ---
 
@@ -33,4 +35,10 @@ The implementation of Vellum leverages specific advanced engineering methodologi
 ## 5. File Exporting & PDF Document Generation
 *   **Structured CSV Generation**: Serializing SQLite transaction entities into a standardized CSV format matching the household upload template.
 *   **Native PDF Canvas Layouts**: Drawing professional, multi-page financial summary reports using Android's native `PdfDocument` and `Canvas` API. Features pixel-perfect positioning, drawing of complex image resources (chalkboard background texture and launcher mipmap icon), category breakdown progress bars, summary metric cards, alternating-row data tables, and dynamic footer page numbering.
+
+---
+
+## 6. On-Device AI & Semantic Matching
+*   **Vector Embeddings & Cosine Similarity**: Computing lightweight concept vector embeddings and calculating cosine similarity in Kotlin ([SemanticMatcher.kt](app/src/main/java/com/example/vellum/data/SemanticMatcher.kt)) to answer semantic natural language queries locally without external APIs.
+*   **OCR Receipt Parsing**: Utilizing Google ML Kit Text Recognition to process receipts, extract line contents, and parse transaction properties (e.g., price and transaction category) automatically.
 

@@ -145,3 +145,36 @@ interface PreferenceDao {
     @Query("DELETE FROM preferences")
     suspend fun deleteAllPreferences()
 }
+
+@Dao
+interface StickyNoteDao {
+    @Query("SELECT * FROM sticky_notes WHERE isDeleted = 0 ORDER BY createdAt DESC")
+    fun getAllStickyNotesFlow(): Flow<List<StickyNoteEntity>>
+
+    @Query("SELECT * FROM sticky_notes WHERE isDeleted = 0 AND (userEmail IS NULL OR userEmail = '') ORDER BY createdAt DESC")
+    fun getLocalStickyNotesFlow(): Flow<List<StickyNoteEntity>>
+
+    @Query("SELECT * FROM sticky_notes WHERE isDeleted = 0 AND userEmail = :email ORDER BY createdAt DESC")
+    fun getStickyNotesForUserFlow(email: String): Flow<List<StickyNoteEntity>>
+
+    @Query("SELECT * FROM sticky_notes")
+    suspend fun getAllStickyNotes(): List<StickyNoteEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStickyNote(note: StickyNoteEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStickyNotes(notes: List<StickyNoteEntity>)
+
+    @Query("UPDATE sticky_notes SET isDeleted = 1, deletedAt = :deletedAt, updatedAt = :updatedAt, isSynced = 0 WHERE id = :id")
+    suspend fun markDeleted(id: String, deletedAt: Long, updatedAt: Long)
+
+    @Delete
+    suspend fun deleteStickyNote(note: StickyNoteEntity)
+
+    @Query("DELETE FROM sticky_notes")
+    suspend fun deleteAllStickyNotes()
+
+    @Query("UPDATE sticky_notes SET userEmail = :email WHERE userEmail IS NULL OR userEmail = ''")
+    suspend fun tagStickyNotesToUser(email: String)
+}

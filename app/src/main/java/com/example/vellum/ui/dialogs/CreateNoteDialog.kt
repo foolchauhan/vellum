@@ -34,7 +34,7 @@ fun CreateNoteDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = ChalkboardSlate),
+            colors = CardDefaults.cardColors(containerColor = ParchmentBackground),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)

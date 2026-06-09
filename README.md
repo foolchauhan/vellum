@@ -32,6 +32,30 @@ Vellum is a native Android spending tracker app that offers a peaceful, rustic, 
 
 ---
 
+## 🌟 Version 2.0.0 Features
+
+Vellum v2.0.0 is a major release transforming the app into an award-winning finance tracker with professional utility and classroom aesthetics:
+
+- **Custom Classroom Themes**: Includes Greenboard and Blueprint chalkboard themes in addition to classic Dark/Light modes.
+- **Handwriting Typography Selector**: Choose from Cabin Sketch, Patrick Hand, Fredericka the Great, and Caveat handwriting fonts.
+- **Chalkboard Animations**: Features smooth chalkboard eraser wiping sweep animations and count-up balance tallies.
+- **Envelope Budgeting**: Set budget limits for categories and view hand-drawn chalk-style progress bars of remaining envelopes.
+- **Split Transactions**: Split individual transaction entries into multiple sub-categories and accounts.
+- **Smart Utilities**:
+  - **AI Semantic & Natural Language Search**: Enter natural language questions in the transaction search bar (e.g., "how much did I spend on food in June?") to instantly calculate total expenses, income, averages, net balance, and transaction counts using a lightweight on-device vector matcher.
+  - **Biometric Security**: Protect your finances with Fingerprint/FaceID lock screens on startup.
+  - **Receipt OCR Scanner**: Instantly extract and populate price amounts using on-device ML Kit text recognition.
+  - **AI Categorization**: Automatically categorizes transactions based on note keywords.
+- **Conflict Resolution UI**: View and choose between local and server states side-by-side during sync conflicts.
+- **Offline Sync Queue**: Track pending offline records with a top-bar chalk-drawn cloud icon and badge count.
+- **Interactive Home Widgets**: Display today's spend and current balance on home screen widgets rendered in real chalkboard chalk fonts.
+- **Massive Icon Library**: Choose from 80+ custom categories and account icons (53 Expense, 18 Income, 11 Account) with scrollable picker grid dialogs.
+- **Premium Landscape Analytics**: Horizontally scrollable bar chart displays all categories side-by-side with 45-degree rotated labels, and automatically filters all charts by the active account.
+- **Layout & Filter Polish**: Preserves selected account filters on screen rotations and defaults the startup landing page to the **Spending** tab.
+- **Multi-App Side-by-Side Deployment**: Run Vellum 2.0 side-by-side with Vellum 1.0 on a single device for development and testing.
+
+---
+
 ## Project Structure
 
 ```

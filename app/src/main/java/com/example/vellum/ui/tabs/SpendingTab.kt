@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,11 +30,15 @@ import com.example.vellum.ui.components.ChalkboardBackground
 import com.example.vellum.ui.components.HorizontalDivider
 import com.example.vellum.ui.main.MainScreenViewModel
 import java.util.*
+import kotlinx.serialization.json.Json
+import com.example.vellum.data.local.TransactionSplit
+import com.example.vellum.data.local.CategoryEntity
 
 @Composable
 fun SpendingTab(
     viewModel: MainScreenViewModel,
-    onAddTransactionClicked: (String) -> Unit
+    onAddTransactionClicked: (String) -> Unit,
+    onCategoryClicked: (CategoryEntity) -> Unit
 ) {
     val context = LocalContext.current
     val periodLabel by viewModel.periodLabel.collectAsState()
@@ -61,12 +66,27 @@ fun SpendingTab(
     val activeAccountLabel = activeAccount?.name ?: "All Accounts"
 
     val categorySpending = remember(transactions, categories) {
-        val raw = transactions.filter { it.type == "EXPENSE" }
-            .groupBy { it.categoryId }
-            .map { (catId, txs) ->
-                val catName = txs.firstOrNull()?.categoryName ?: categories.find { it.id == catId }?.name ?: "Unknown"
-                val amount = txs.sumOf { it.amount }
-                val colorHex = categories.find { it.id == catId }?.chartColor ?: "#4E3C30"
+        val contributions = mutableListOf<Pair<String, Double>>()
+        transactions.filter { it.type == "EXPENSE" }.forEach { tx ->
+            if (tx.splits.isNotEmpty()) {
+                try {
+                    val splits = Json.decodeFromString<List<TransactionSplit>>(tx.splits)
+                    splits.forEach { split ->
+                        contributions.add(Pair(split.categoryId, split.amount))
+                    }
+                } catch (e: Exception) {
+                    contributions.add(Pair(tx.categoryId, tx.amount))
+                }
+            } else {
+                contributions.add(Pair(tx.categoryId, tx.amount))
+            }
+        }
+        val raw = contributions.groupBy { it.first }
+            .map { (catId, items) ->
+                val amount = items.sumOf { it.second }
+                val category = categories.find { it.id == catId }
+                val catName = category?.name ?: "Unknown"
+                val colorHex = category?.chartColor ?: "#4E3C30"
                 Triple(catName, amount, colorHex)
             }
             .sortedByDescending { it.second }
@@ -233,7 +253,11 @@ fun SpendingTab(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(text = "Income", style = fontStyle)
-                        Text(text = String.format(Locale.US, "%s%.2f", currencySymbol, metrics.totalIncome), style = fontStyle.copy(color = ChalkGreen))
+                        ChalkAnimatedAmount(
+                            targetValue = metrics.totalIncome,
+                            currencySymbol = currencySymbol,
+                            style = fontStyle.copy(color = ChalkGreen)
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -244,7 +268,11 @@ fun SpendingTab(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(text = "Expense", style = fontStyle)
-                        Text(text = String.format(Locale.US, "%s%.2f", currencySymbol, metrics.totalExpense), style = fontStyle.copy(color = ChalkRed))
+                        ChalkAnimatedAmount(
+                            targetValue = metrics.totalExpense,
+                            currencySymbol = currencySymbol,
+                            style = fontStyle.copy(color = ChalkRed)
+                        )
                     }
 
                     // Carry Over starting balance row (if enabled for the account)
@@ -257,8 +285,9 @@ fun SpendingTab(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(text = "Carry Over", style = fontStyle)
-                            Text(
-                                text = String.format(Locale.US, "%s%.2f", currencySymbol, priorBalance),
+                            ChalkAnimatedAmount(
+                                targetValue = priorBalance,
+                                currencySymbol = currencySymbol,
                                 style = fontStyle.copy(color = if (priorBalance >= 0) ChalkGreen else ChalkRed)
                             )
                         }
@@ -290,7 +319,142 @@ fun SpendingTab(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(text = "Balance", style = titleStyle)
-                        Text(text = String.format(Locale.US, "%s%.2f", currencySymbol, metrics.balance), style = titleStyle.copy(color = ChalkBlue))
+                        ChalkAnimatedAmount(
+                            targetValue = metrics.balance,
+                            currencySymbol = currencySymbol,
+                            style = titleStyle.copy(color = ChalkBlue)
+                        )
+                    }
+                }
+
+                val showFinancialTutor = preferences["financial_tutor"] ?: "On"
+                if (showFinancialTutor == "On") {
+                    val aiInsights by viewModel.aiInsights.collectAsState()
+                    if (aiInsights.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { aiInsights.size })
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isDarkTheme) Color(0xFF2C3231) else Color(0xFFF2EAD8))
+                                .border(1.dp, ParchmentLine, RoundedCornerShape(12.dp))
+                                .padding(12.dp)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                androidx.compose.foundation.pager.HorizontalPager(
+                                    state = pagerState,
+                                    modifier = Modifier.fillMaxWidth().wrapContentHeight()
+                                ) { page ->
+                                    val insight = aiInsights.getOrNull(page) ?: ""
+                                    var isExpanded by remember(page) { mutableStateOf(false) }
+                                    Row(
+                                        verticalAlignment = Alignment.Top,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+                                    ) {
+                                        val density = androidx.compose.ui.platform.LocalDensity.current
+                                        val owlSizePx = 56f * density.density
+                                        val drawColor = ParchmentDarkBrown
+                                        Canvas(modifier = Modifier.size(36.dp)) {
+                                            val scaleFactor = size.width / owlSizePx
+                                            withTransform({
+                                                scale(scaleFactor, scaleFactor, pivot = Offset(0f, 0f))
+                                            }) {
+                                                drawCircle(
+                                                    color = drawColor,
+                                                    radius = 22f,
+                                                    center = Offset(28f, 28f),
+                                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                                                )
+                                                drawCircle(
+                                                    color = drawColor,
+                                                    radius = 5f,
+                                                    center = Offset(19f, 24f),
+                                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f)
+                                                )
+                                                drawCircle(
+                                                    color = drawColor,
+                                                    radius = 5f,
+                                                    center = Offset(37f, 24f),
+                                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f)
+                                                )
+                                                drawCircle(
+                                                    color = drawColor,
+                                                    radius = 2.2f,
+                                                    center = Offset(19f, 24f)
+                                                )
+                                                drawCircle(
+                                                    color = drawColor,
+                                                    radius = 2.2f,
+                                                    center = Offset(37f, 24f)
+                                                )
+                                                val beakPath = androidx.compose.ui.graphics.Path().apply {
+                                                    moveTo(28f, 27f)
+                                                    lineTo(25f, 32f)
+                                                    lineTo(31f, 32f)
+                                                    close()
+                                                }
+                                                drawPath(path = beakPath, color = drawColor)
+                                                val capPath = androidx.compose.ui.graphics.Path().apply {
+                                                    moveTo(28f, 2f)
+                                                    lineTo(14f, 8f)
+                                                    lineTo(28f, 14f)
+                                                    lineTo(42f, 8f)
+                                                    close()
+                                                }
+                                                drawPath(path = capPath, color = drawColor)
+                                                drawLine(color = drawColor, start = Offset(42f, 8f), end = Offset(45f, 18f), strokeWidth = 1.5f)
+                                            }
+                                        }
+
+                                        Column(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable { isExpanded = !isExpanded }
+                                        ) {
+                                            Text(
+                                                text = "Financial Tutor (${page + 1}/${aiInsights.size})",
+                                                fontFamily = ParchmentFontFamily,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ParchmentBlueText
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = insight,
+                                                fontFamily = ParchmentFontFamily,
+                                                fontSize = 13.sp,
+                                                color = ParchmentDarkBrown,
+                                                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                                                overflow = if (isExpanded) androidx.compose.ui.text.style.TextOverflow.Clip else androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                // Dot indicators for pager
+                                if (aiInsights.size > 1) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        repeat(aiInsights.size) { iteration ->
+                                            val color = if (pagerState.currentPage == iteration) ParchmentBlueText else ParchmentLine
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(2.dp)
+                                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                                    .background(color)
+                                                    .size(6.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -313,31 +477,86 @@ fun SpendingTab(
                         } catch (e: Exception) {
                             ParchmentDarkBrown
                         }
+                        val categoryObj = categories.find { it.name == catName }
+                        val budget = categoryObj?.budget ?: 0.0
 
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .clickable {
+                                    categoryObj?.let { onCategoryClicked(it) }
+                                }
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .clip(RoundedCornerShape(2.dp))
-                                        .background(color)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(12.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(color)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = catName,
+                                        style = fontStyle.copy(fontSize = 16.sp)
+                                    )
+                                }
                                 Text(
-                                    text = catName,
-                                    style = fontStyle.copy(fontSize = 16.sp)
+                                    text = String.format(Locale.US, "%s%.2f", currencySymbol, amount),
+                                    style = fontStyle.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 )
                             }
-                            Text(
-                                text = String.format(Locale.US, "%s%.2f", currencySymbol, amount),
-                                style = fontStyle.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            )
+
+                            if (budget > 0.0) {
+                                val remaining = budget - amount
+                                val fraction = if (remaining > 0) (remaining / budget).toFloat() else 0f
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = String.format(Locale.US, "Remaining: %s%.2f (%.0f%%)", currencySymbol, if (remaining > 0) remaining else 0.0, fraction * 100),
+                                        style = fontStyle.copy(fontSize = 12.sp, color = ParchmentDarkBrown.copy(alpha = 0.6f))
+                                    )
+                                    Text(
+                                        text = String.format(Locale.US, "Budget: %s%.2f", currencySymbol, budget),
+                                        style = fontStyle.copy(fontSize = 12.sp, color = ParchmentDarkBrown.copy(alpha = 0.6f))
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Canvas(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                ) {
+                                    val w = size.width
+                                    val h = size.height
+                                    // Faint dashed line for budget path
+                                    drawLine(
+                                        color = color.copy(alpha = 0.2f),
+                                        start = Offset(0f, h / 2f),
+                                        end = Offset(w, h / 2f),
+                                        strokeWidth = 4f,
+                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
+                                    )
+                                    // Stronger wavy/dashed line for remaining budget path
+                                    if (fraction > 0f) {
+                                        drawLine(
+                                            color = color,
+                                            start = Offset(0f, h / 2f),
+                                            end = Offset(w * fraction, h / 2f),
+                                            strokeWidth = 6f,
+                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 6f), 0f)
+                                        )
+                                    }
+                                }
+                            }
                         }
                         HorizontalDivider(
                             color = ParchmentLine.copy(alpha = 0.5f),
@@ -390,4 +609,24 @@ fun SpendingTab(
             )
         }
     }
+}
+
+@Composable
+fun ChalkAnimatedAmount(
+    targetValue: Double,
+    currencySymbol: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    prefix: String = ""
+) {
+    val animatedValue by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = targetValue.toFloat(),
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 1000, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "ChalkAmount"
+    )
+    Text(
+        text = String.format(Locale.US, "%s%s%.2f", prefix, currencySymbol, animatedValue),
+        style = style,
+        modifier = modifier
+    )
 }

@@ -14,10 +14,13 @@ interface DataRepository {
     fun getCategoriesFlow(): Flow<List<CategoryEntity>>
     fun getAccountsFlow(): Flow<List<AccountEntity>>
     fun getPreferencesFlow(): Flow<List<PreferenceEntity>>
+    fun getStickyNotesFlow(): Flow<List<StickyNoteEntity>>
+    fun getStickyNotesForUserFlow(email: String?): Flow<List<StickyNoteEntity>>
 
     suspend fun insertTransaction(transaction: TransactionEntity)
     suspend fun insertCategory(category: CategoryEntity)
     suspend fun insertAccount(account: AccountEntity)
+    suspend fun insertStickyNote(note: StickyNoteEntity)
     suspend fun insertPreference(key: String, value: String)
     suspend fun getPreferenceValue(key: String): String?
     suspend fun tagLocalDataToUser(email: String)
@@ -26,6 +29,7 @@ interface DataRepository {
     suspend fun softDeleteTransaction(transaction: TransactionEntity)
     suspend fun softDeleteCategory(category: CategoryEntity)
     suspend fun softDeleteAccount(account: AccountEntity)
+    suspend fun softDeleteStickyNote(note: StickyNoteEntity)
 
     // Non-owner leave: removes account row locally only, no transaction cascade
     suspend fun leaveAccount(account: AccountEntity)
@@ -56,6 +60,16 @@ class DefaultDataRepository(private val db: VellumDatabase) : DataRepository {
     override fun getPreferencesFlow(): Flow<List<PreferenceEntity>> =
         db.preferenceDao().getAllPreferencesFlow()
 
+    override fun getStickyNotesFlow(): Flow<List<StickyNoteEntity>> =
+        db.stickyNoteDao().getAllStickyNotesFlow()
+
+    override fun getStickyNotesForUserFlow(email: String?): Flow<List<StickyNoteEntity>> =
+        if (email == null) {
+            db.stickyNoteDao().getLocalStickyNotesFlow()
+        } else {
+            db.stickyNoteDao().getStickyNotesForUserFlow(email)
+        }
+
     override suspend fun insertTransaction(transaction: TransactionEntity) =
         db.transactionDao().insertTransaction(transaction)
 
@@ -64,6 +78,9 @@ class DefaultDataRepository(private val db: VellumDatabase) : DataRepository {
 
     override suspend fun insertAccount(account: AccountEntity) =
         db.accountDao().insertAccount(account)
+
+    override suspend fun insertStickyNote(note: StickyNoteEntity) =
+        db.stickyNoteDao().insertStickyNote(note)
 
     // ── Soft deletes (user-facing) ────────────────────────────────────────────
 
@@ -86,6 +103,11 @@ class DefaultDataRepository(private val db: VellumDatabase) : DataRepository {
         val now = System.currentTimeMillis()
         db.accountDao().markDeleted(account.id, deletedAt = now, updatedAt = now)
         // NOTE: transactions are NOT cascade-deleted. They remain visible under "(Deleted Account)".
+    }
+
+    override suspend fun softDeleteStickyNote(note: StickyNoteEntity) = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        db.stickyNoteDao().markDeleted(note.id, deletedAt = now, updatedAt = now)
     }
 
     // ── Leave shared account (non-owner) ─────────────────────────────────────
@@ -266,6 +288,7 @@ class DefaultDataRepository(private val db: VellumDatabase) : DataRepository {
         db.transactionDao().tagTransactionsToUser(email)
         db.categoryDao().tagCategoriesToUser(email)
         db.accountDao().tagAccountsToUser(email)
+        db.stickyNoteDao().tagStickyNotesToUser(email)
     }
 
     // ── Sync ──────────────────────────────────────────────────────────────────
@@ -289,6 +312,7 @@ class DefaultDataRepository(private val db: VellumDatabase) : DataRepository {
         db.transactionDao().deleteAllTransactions()
         db.categoryDao().deleteAllCategories()
         db.accountDao().deleteAllAccounts()
+        db.stickyNoteDao().deleteAllStickyNotes()
         db.preferenceDao().deleteAllPreferences()
         VellumDatabase.prepopulateDatabase(db)
         if (sheetsUrl != null) {

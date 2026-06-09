@@ -21,7 +21,8 @@ data class TransactionEntity(
     val isSynced: Boolean = false,
     val updatedAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val splits: String = ""
 )
 
 @Entity(tableName = "categories")
@@ -37,7 +38,8 @@ data class CategoryEntity(
     val isSynced: Boolean = false,
     val updatedAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val budget: Double = 0.0
 )
 
 @Entity(tableName = "accounts")
@@ -64,4 +66,28 @@ data class AccountEntity(
 data class PreferenceEntity(
     @PrimaryKey val key: String,
     val value: String
+)
+
+@Serializable
+data class TransactionSplit(
+    val categoryId: String,
+    val categoryName: String,
+    val accountId: String,
+    val accountName: String,
+    val amount: Double,
+    val note: String
+)
+
+@Entity(tableName = "sticky_notes")
+@Serializable
+data class StickyNoteEntity(
+    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    val content: String,
+    val colorHex: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val userEmail: String? = null,
+    val isSynced: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null
 )

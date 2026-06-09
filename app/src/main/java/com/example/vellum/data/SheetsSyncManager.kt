@@ -13,6 +13,7 @@ import java.util.UUID
 
 object SheetsSyncManager {
     private const val TAG = "SheetsSyncManager"
+    var transactionConflictResolver: (suspend (TransactionEntity, TransactionEntity) -> Boolean)? = null
 
     // Execute HTTP request manually following redirects across domains (required for Google Apps Script Web Apps)
     private fun executeHttp(urlStr: String, method: String, jsonBody: String? = null): String {
@@ -99,6 +100,7 @@ object SheetsSyncManager {
             val localCats = db.categoryDao().getAllCategories()
             val localAccs = db.accountDao().getAllAccounts()
             val localPrefs = db.preferenceDao().getAllPreferences()
+            val localNotes = db.stickyNoteDao().getAllStickyNotes()
 
             // 2. Fetch the full remote dataset (GET sync action)
             val queryUrl = "$webAppUrl?action=sync&email=${java.net.URLEncoder.encode(email, "UTF-8")}&displayName=${java.net.URLEncoder.encode(displayName ?: "", "UTF-8")}&photoUrl=${java.net.URLEncoder.encode(photoUrl ?: "", "UTF-8")}"
@@ -186,6 +188,27 @@ object SheetsSyncManager {
                 )
             }
 
+            val remoteNotesArray = responseJson.optJSONArray("sticky_notes")
+            val remoteNotes = mutableListOf<StickyNoteEntity>()
+            if (remoteNotesArray != null) {
+                for (i in 0 until remoteNotesArray.length()) {
+                    val o = remoteNotesArray.getJSONObject(i)
+                    remoteNotes.add(
+                        StickyNoteEntity(
+                            id = o.getString("id"),
+                            content = o.getString("content"),
+                            colorHex = o.getString("colorHex"),
+                            createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+                            userEmail = o.optString("userEmail").takeIf { it.isNotEmpty() },
+                            isSynced = true,
+                            updatedAt = o.optLong("updatedAt", 0L),
+                            isDeleted = o.optBoolean("isDeleted", false),
+                            deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt")
+                        )
+                    )
+                }
+            }
+
             // 1. Resolve left accounts first
             val leftAccountsStr = db.preferenceDao().getPreferenceValue("left_accounts") ?: ""
             val leftAccountsSet = if (leftAccountsStr.isEmpty()) emptySet() else leftAccountsStr.split(",").toSet()
@@ -241,21 +264,47 @@ object SheetsSyncManager {
             // Merge Transactions
             val mergedTx = mutableMapOf<String, TransactionEntity>()
             remoteTx.forEach { mergedTx[it.id] = it }
-            localTx.forEach { local ->
+            for (local in localTx) {
                 val remote = mergedTx[local.id]
                 if (remote != null) {
-                    if (local.updatedAt >= remote.updatedAt) {
-                        val isSame = local.amount == remote.amount &&
-                                     local.type == remote.type &&
-                                     local.categoryId == remote.categoryId &&
-                                     local.categoryName == remote.categoryName &&
-                                     local.accountId == remote.accountId &&
-                                     local.accountName == remote.accountName &&
-                                     local.note == remote.note &&
-                                     local.timestamp == remote.timestamp &&
-                                     local.isDeleted == remote.isDeleted &&
-                                     local.updatedAt == remote.updatedAt
-                        mergedTx[local.id] = local.copy(isSynced = isSame)
+                    if (!local.isSynced && local.updatedAt != remote.updatedAt) {
+                        val resolver = transactionConflictResolver
+                        if (resolver != null) {
+                            val useLocal = resolver(local, remote)
+                            if (useLocal) {
+                                mergedTx[local.id] = local.copy(isSynced = false, updatedAt = System.currentTimeMillis())
+                            } else {
+                                mergedTx[local.id] = remote.copy(isSynced = true)
+                            }
+                        } else {
+                            if (local.updatedAt >= remote.updatedAt) {
+                                val isSame = local.amount == remote.amount &&
+                                             local.type == remote.type &&
+                                             local.categoryId == remote.categoryId &&
+                                             local.categoryName == remote.categoryName &&
+                                             local.accountId == remote.accountId &&
+                                             local.accountName == remote.accountName &&
+                                             local.note == remote.note &&
+                                             local.timestamp == remote.timestamp &&
+                                             local.isDeleted == remote.isDeleted &&
+                                             local.updatedAt == remote.updatedAt
+                                mergedTx[local.id] = local.copy(isSynced = isSame)
+                            }
+                        }
+                    } else {
+                        if (local.updatedAt >= remote.updatedAt) {
+                            val isSame = local.amount == remote.amount &&
+                                         local.type == remote.type &&
+                                         local.categoryId == remote.categoryId &&
+                                         local.categoryName == remote.categoryName &&
+                                         local.accountId == remote.accountId &&
+                                         local.accountName == remote.accountName &&
+                                         local.note == remote.note &&
+                                         local.timestamp == remote.timestamp &&
+                                         local.isDeleted == remote.isDeleted &&
+                                         local.updatedAt == remote.updatedAt
+                            mergedTx[local.id] = local.copy(isSynced = isSame)
+                        }
                     }
                 } else {
                     if (!local.isSynced) {
@@ -264,6 +313,27 @@ object SheetsSyncManager {
                 }
             }
             val finalTx = mergedTx.values.toList()
+
+            // Merge Sticky Notes
+            val mergedNotes = mutableMapOf<String, StickyNoteEntity>()
+            remoteNotes.forEach { mergedNotes[it.id] = it }
+            localNotes.forEach { local ->
+                val remote = mergedNotes[local.id]
+                if (remote != null) {
+                    if (local.updatedAt >= remote.updatedAt) {
+                        val isSame = local.content == remote.content &&
+                                     local.colorHex == remote.colorHex &&
+                                     local.isDeleted == remote.isDeleted &&
+                                     local.updatedAt == remote.updatedAt
+                        mergedNotes[local.id] = local.copy(isSynced = isSame)
+                    }
+                } else {
+                    if (!local.isSynced) {
+                        mergedNotes[local.id] = local
+                    }
+                }
+            }
+            val finalNotes = mergedNotes.values.toList()
 
             // Merge Preferences: local changes win for a normal sync
             val finalPrefs = mutableListOf<PreferenceEntity>()
@@ -281,11 +351,13 @@ object SheetsSyncManager {
                     db.transactionDao().deleteAllTransactions()
                     db.categoryDao().deleteAllCategories()
                     db.accountDao().deleteAllAccounts()
+                    db.stickyNoteDao().deleteAllStickyNotes()
                     db.preferenceDao().deleteAllPreferences()
 
                     if (finalAccs.isNotEmpty()) db.accountDao().insertAccounts(finalAccs)
                     if (finalCats.isNotEmpty()) db.categoryDao().insertCategories(finalCats)
                     if (finalTx.isNotEmpty()) db.transactionDao().insertTransactions(finalTx)
+                    if (finalNotes.isNotEmpty()) db.stickyNoteDao().insertStickyNotes(finalNotes)
 
                     // Seed default preferences if any are missing
                     val defaultPrefs = listOf(
@@ -301,7 +373,9 @@ object SheetsSyncManager {
                         PreferenceEntity("tabs_position", "Top"),
                         PreferenceEntity("reminders", "Every Week"),
                         PreferenceEntity("auto_backup", "Off"),
-                        PreferenceEntity("passcode", "Off")
+                        PreferenceEntity("passcode", "Off"),
+                        PreferenceEntity("handwriting_style", "Default"),
+                        PreferenceEntity("biometric_lock", "Off")
                     )
                     val finalPrefKeys = finalPrefs.map { it.key }.toSet()
                     val prefsToSave = finalPrefs.toMutableList()
@@ -318,19 +392,21 @@ object SheetsSyncManager {
             val dirtyTx = db.transactionDao().getAllTransactions().filter { !it.isSynced }
             val dirtyCats = db.categoryDao().getAllCategories().filter { !it.isSynced }
             val dirtyAccs = db.accountDao().getAllAccounts().filter { !it.isSynced }
+            val dirtyNotes = db.stickyNoteDao().getAllStickyNotes().filter { !it.isSynced }
             val dirtyPrefs = db.preferenceDao().getAllPreferences() // always upload all prefs
 
             val delTxStr = db.preferenceDao().getPreferenceValue("deleted_transactions") ?: ""
             val delCatStr = db.preferenceDao().getPreferenceValue("deleted_categories") ?: ""
             val delAccStr = db.preferenceDao().getPreferenceValue("deleted_accounts") ?: ""
+            val delNotesStr = db.preferenceDao().getPreferenceValue("deleted_sticky_notes") ?: ""
             val leftAccsStrAfterMerge = db.preferenceDao().getPreferenceValue("left_accounts") ?: ""
 
             val preferencesChanged = localPrefs.any { local ->
                 val remote = remotePrefs.find { it.key == local.key }
                 remote == null || remote.value != local.value
             }
-            val hasDeletions = delTxStr.isNotEmpty() || delCatStr.isNotEmpty() || delAccStr.isNotEmpty() || leftAccsStrAfterMerge.isNotEmpty()
-            val hasDirtyChanges = dirtyTx.isNotEmpty() || dirtyCats.isNotEmpty() || dirtyAccs.isNotEmpty() || hasDeletions || preferencesChanged
+            val hasDeletions = delTxStr.isNotEmpty() || delCatStr.isNotEmpty() || delAccStr.isNotEmpty() || delNotesStr.isNotEmpty() || leftAccsStrAfterMerge.isNotEmpty()
+            val hasDirtyChanges = dirtyTx.isNotEmpty() || dirtyCats.isNotEmpty() || dirtyAccs.isNotEmpty() || dirtyNotes.isNotEmpty() || hasDeletions || preferencesChanged
 
             if (hasDirtyChanges) {
                 val requestJson = JSONObject()
@@ -353,6 +429,25 @@ object SheetsSyncManager {
                 val leftAccArray = JSONArray()
                 if (leftAccsStrAfterMerge.isNotEmpty()) leftAccsStrAfterMerge.split(",").forEach { leftAccArray.put(it) }
                 requestJson.put("left_accounts", leftAccArray)
+
+                val delNotesArray = JSONArray()
+                if (delNotesStr.isNotEmpty()) delNotesStr.split(",").forEach { delNotesArray.put(it) }
+                requestJson.put("deleted_sticky_notes", delNotesArray)
+
+                val notesArray = JSONArray()
+                dirtyNotes.forEach { note ->
+                    val o = JSONObject()
+                    o.put("id", note.id)
+                    o.put("content", note.content)
+                    o.put("colorHex", note.colorHex)
+                    o.put("createdAt", note.createdAt)
+                    o.put("userEmail", note.userEmail ?: email)
+                    o.put("updatedAt", note.updatedAt)
+                    o.put("isDeleted", note.isDeleted)
+                    o.put("deletedAt", note.deletedAt ?: JSONObject.NULL)
+                    notesArray.put(o)
+                }
+                requestJson.put("sticky_notes", notesArray)
 
                 val txArray = JSONArray()
                 dirtyTx.forEach { tx ->
@@ -430,10 +525,12 @@ object SheetsSyncManager {
                         dirtyTx.forEach { db.transactionDao().insertTransaction(it.copy(isSynced = true)) }
                         dirtyCats.forEach { db.categoryDao().insertCategory(it.copy(isSynced = true)) }
                         dirtyAccs.forEach { db.accountDao().insertAccount(it.copy(isSynced = true)) }
+                        dirtyNotes.forEach { db.stickyNoteDao().insertStickyNote(it.copy(isSynced = true)) }
 
                         db.preferenceDao().insertPreference(PreferenceEntity("deleted_transactions", ""))
                         db.preferenceDao().insertPreference(PreferenceEntity("deleted_categories", ""))
                         db.preferenceDao().insertPreference(PreferenceEntity("deleted_accounts", ""))
+                        db.preferenceDao().insertPreference(PreferenceEntity("deleted_sticky_notes", ""))
                         db.preferenceDao().insertPreference(PreferenceEntity("left_accounts", ""))
                     }
                 }

@@ -49,13 +49,12 @@ val ChalkFontFamily = FontFamily(
 val ParchmentFontFamily: FontFamily
     @Composable
     @ReadOnlyComposable
-    get() = if (MaterialTheme.colorScheme.background == ChalkboardSlate) CabinSketchLocalFont else CaveatFont
+    get() = MaterialTheme.typography.bodyLarge.fontFamily ?: ChalkFontFamily
 
-// Title Font remapped dynamically: Fredericka local font for chalkboard slate, Caveat for light theme parchment
 val ParchmentTitleFontFamily: FontFamily
     @Composable
     @ReadOnlyComposable
-    get() = if (MaterialTheme.colorScheme.background == ChalkboardSlate) FrederickaLocalFont else CaveatFont
+    get() = MaterialTheme.typography.titleLarge.fontFamily ?: ChalkFontFamily
 
 // App Typography Styles
 val Typography: Typography

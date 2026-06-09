@@ -53,6 +53,7 @@ fun AddEditCategoryScreen(
     var type by remember { mutableStateOf(categoryToEdit?.type ?: predefinedType) }
     var selectedIconName by remember { mutableStateOf(categoryToEdit?.icon ?: "general") }
     var selectedColorHex by remember { mutableStateOf<String?>(categoryToEdit?.chartColor) }
+    var budgetInput by remember { mutableStateOf(categoryToEdit?.budget?.let { if (it == 0.0) "" else it.toString() } ?: "") }
 
     var showIconPickerDialog by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
@@ -123,7 +124,8 @@ fun AddEditCategoryScreen(
                                     icon = selectedIconName,
                                     chartColor = selectedColorHex ?: "#4E3C30",
                                     id = categoryToEdit?.id,
-                                    isDefault = categoryToEdit?.isDefault ?: false
+                                    isDefault = categoryToEdit?.isDefault ?: false,
+                                    budget = budgetInput.toDoubleOrNull() ?: 0.0
                                 )
                                 onBack()
                             }
@@ -229,6 +231,31 @@ fun AddEditCategoryScreen(
                     }
                 }
 
+                if (type == "EXPENSE") {
+                    FormRow(label = "Budget Limit") {
+                        TextField(
+                            value = budgetInput,
+                            onValueChange = { budgetInput = it },
+                            placeholder = { Text("Budget (optional)", color = Color.Gray, fontFamily = ParchmentFontFamily) },
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                            textStyle = TextStyle(
+                                color = ParchmentDarkBrown,
+                                fontFamily = ParchmentFontFamily,
+                                fontSize = 16.sp
+                            ),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
                 if (categoryToEdit != null) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
@@ -279,47 +306,53 @@ fun AddEditCategoryScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     val rows = iconsList.chunked(4)
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        rows.forEach { rowItems ->
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                rowItems.forEach { iconName ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .aspectRatio(1f)
-                                            .border(
-                                                1.dp,
-                                                if (selectedIconName == iconName) ParchmentDarkBrown else Color.Transparent,
-                                                RoundedCornerShape(8.dp)
-                                            )
-                                            .clickable {
-                                                selectedIconName = iconName
-                                                showIconPickerDialog = false
-                                            }
-                                            .padding(8.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            rows.forEach { rowItems ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    rowItems.forEach { iconName ->
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .aspectRatio(1f)
+                                                .border(
+                                                    1.dp,
+                                                    if (selectedIconName == iconName) ParchmentDarkBrown else Color.Transparent,
+                                                    RoundedCornerShape(8.dp)
+                                                )
+                                                .clickable {
+                                                    selectedIconName = iconName
+                                                    showIconPickerDialog = false
+                                                }
+                                                .padding(8.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = getIconForName(iconName, isOutlined),
-                                                contentDescription = iconName,
-                                                tint = ParchmentDarkBrown,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = iconName,
-                                                fontSize = 9.sp,
-                                                color = ParchmentDarkBrown,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = getIconForName(iconName, isOutlined),
+                                                    contentDescription = iconName,
+                                                    tint = ParchmentDarkBrown,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = iconName,
+                                                    fontSize = 9.sp,
+                                                    color = ParchmentDarkBrown,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
                                         }
                                     }
                                 }

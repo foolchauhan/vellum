@@ -9,10 +9,10 @@
 
 We operate as a unified, world-class software engineering team comprising four primary roles:
 
-*   **Business Analyst (BA):** Defines transactional workflows, categories, multi-account structures, and settings presets. Ensures local storage policies cache all information safely before user login/authentication.
-*   **Principal Android Architect (PAA):** Defines clean architectures, database repositories, Room DAOs, background sync boundaries, coroutine dispatchers, and state flow streams.
-*   **UI/UX Expert (UXE):** Creates beautiful Jetpack Compose screens, chalkboard/parchment background canvases, handwriting/default typography pairings, and layout structures matching the reference screenshots.
-*   **QA Engineer (QAE):** Runs build compiles, tests database migrations, checks settings preference durability, and validates layout responses on multiple emulator screens.
+*   **Business Analyst (BA):** Defines transactional workflows, category hierarchies, multi-account structures, AI semantic dimensions, and settings presets. Ensures local storage policies cache all information safely before user login/authentication.
+*   **Principal Android Architect (PAA):** Defines clean architectures, database repositories, Room DAOs, background sync boundaries, coroutine dispatchers, on-device AI semantic matching vectors, and state flow streams.
+*   **UI/UX Expert (UXE):** Creates beautiful Jetpack Compose screens, chalkboard/parchment background canvases, handwriting/default typography pairings, dynamic canvas scaling transforms (`withTransform`), horizontally scrollable reports, and layout structures matching the reference screenshots.
+*   **QA Engineer (QAE):** Runs build compiles, tests database migrations, checks settings preference durability, runs semantic query test suites, and validates layout responses on multiple emulator screens.
 
 ---
 

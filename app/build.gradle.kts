@@ -16,6 +16,16 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["appName"] = "Vellum"
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -23,6 +33,10 @@ android {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("debug")
+        }
+        debug {
+            applicationIdSuffix = ".v2"
+            manifestPlaceholders["appName"] = "Vellum 2.0"
         }
     }
     compileOptions {
@@ -120,6 +134,15 @@ dependencies {
 
   // WorkManager
   implementation(libs.androidx.work.runtime)
+
+  // Biometrics
+  implementation(libs.androidx.biometric)
+
+  // ML Kit Text Recognition for OCR scanning
+  implementation(libs.play.services.mlkit.text.recognition)
+
+  // Kotlinx Serialization JSON library
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
 
 tasks.register("copyReleaseApkToRoot") {

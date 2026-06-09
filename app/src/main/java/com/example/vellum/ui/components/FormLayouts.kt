@@ -1,5 +1,6 @@
 package com.example.vellum.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -18,7 +19,7 @@ import com.example.vellum.theme.ParchmentLine
 import com.example.vellum.theme.SettingsSectionHeader
 
 @Composable
-fun FormSectionHeader(title: String) {
+fun FormSectionHeader(title: String, onHelpClick: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -38,7 +39,15 @@ fun FormSectionHeader(title: String) {
             imageVector = Icons.Default.HelpOutline,
             contentDescription = "Help",
             tint = ParchmentDarkBrown.copy(alpha = 0.5f),
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier
+                .size(18.dp)
+                .then(
+                    if (onHelpClick != null) {
+                        Modifier.clickable { onHelpClick() }
+                    } else {
+                        Modifier
+                    }
+                )
         )
     }
 }

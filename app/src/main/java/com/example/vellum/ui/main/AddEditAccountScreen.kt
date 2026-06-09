@@ -406,47 +406,53 @@ fun AddEditAccountScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     val rows = ACCOUNT_ICONS.chunked(4)
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        rows.forEach { rowItems ->
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                rowItems.forEach { iconName ->
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .aspectRatio(1f)
-                                            .border(
-                                                1.dp,
-                                                if (selectedIconName == iconName) ParchmentDarkBrown else Color.Transparent,
-                                                RoundedCornerShape(8.dp)
-                                            )
-                                            .clickable {
-                                                selectedIconName = iconName
-                                                showIconPickerDialog = false
-                                            }
-                                            .padding(8.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            rows.forEach { rowItems ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    rowItems.forEach { iconName ->
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .aspectRatio(1f)
+                                                .border(
+                                                    1.dp,
+                                                    if (selectedIconName == iconName) ParchmentDarkBrown else Color.Transparent,
+                                                    RoundedCornerShape(8.dp)
+                                                )
+                                                .clickable {
+                                                    selectedIconName = iconName
+                                                    showIconPickerDialog = false
+                                                }
+                                                .padding(8.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = getIconForName(iconName, isOutlined),
-                                                contentDescription = iconName,
-                                                tint = ParchmentDarkBrown,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = iconName,
-                                                fontSize = 9.sp,
-                                                color = ParchmentDarkBrown,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = getIconForName(iconName, isOutlined),
+                                                    contentDescription = iconName,
+                                                    tint = ParchmentDarkBrown,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = iconName,
+                                                    fontSize = 9.sp,
+                                                    color = ParchmentDarkBrown,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
                                         }
                                     }
                                 }

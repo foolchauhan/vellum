@@ -100,7 +100,8 @@ fun SettingsScreen(
         "time_period" -> Pair("Time Period", listOf("Daily", "Weekly", "Monthly", "Yearly", "All", "Last 6 Months", "Last 1 Year", "Custom"))
         "budget_mode" -> Pair("Budget Mode", listOf("On", "Off"))
         "hide_future" -> Pair("Hide Future Transactions", listOf("On", "Off"))
-        "theme" -> Pair("Theme", listOf("Light", "Dark", "System"))
+        "theme" -> Pair("Theme", listOf("Light", "Dark", "System", "Greenboard", "Blueprint", "Cement", "Glass"))
+        "handwriting_style" -> Pair("Handwriting Style", listOf("Default", "Patrick Hand", "Cursive", "Chalk", "Architects Daughter"))
         "show_notes" -> Pair("Show Transaction Note", listOf("On", "Off"))
         "currency_symbol" -> Pair("Currency Symbol", listOf("Default", "$", "₹", "€", "£"))
         "summary_font" -> Pair("Summary Font", listOf("Chalk", "Default"))
@@ -108,6 +109,8 @@ fun SettingsScreen(
         "tabs_position" -> Pair("Tabs Position", listOf("Top", "Bottom"))
         "reminders" -> Pair("Reminders", listOf("Off", "Daily", "Every Week", "Monthly"))
         "auto_backup" -> Pair("Auto Backup", listOf("On", "Off"))
+        "biometric_lock" -> Pair("Biometric Lock", listOf("On", "Off"))
+        "financial_tutor" -> Pair("Financial Tutor", listOf("On", "Off"))
         else -> null
     }
 
@@ -188,6 +191,15 @@ fun SettingsScreen(
                         activeDialogOption = "hide_future"
                     }
                 }
+                item {
+                    SettingsRow(
+                        title = "Financial Tutor",
+                        value = preferences["financial_tutor"] ?: "On",
+                        iconName = "financialtutor"
+                    ) {
+                        activeDialogOption = "financial_tutor"
+                    }
+                }
 
 
 
@@ -204,6 +216,15 @@ fun SettingsScreen(
                 }
                 item {
                     SettingsRow(
+                        title = "Handwriting Style",
+                        value = preferences["handwriting_style"] ?: "Default",
+                        iconName = "summaryfont"
+                    ) {
+                        activeDialogOption = "handwriting_style"
+                    }
+                }
+                item {
+                    SettingsRow(
                         title = "Show Transaction Note",
                         value = preferences["show_notes"] ?: "On",
                         iconName = "shownote"
@@ -212,9 +233,18 @@ fun SettingsScreen(
                     }
                 }
                 item {
+                    val rawSymbol = preferences["currency_symbol"] ?: "Default"
+                    val displaySymbol = when (rawSymbol) {
+                        "Default" -> "Default (₹)"
+                        "INR" -> "₹"
+                        "USD" -> "$"
+                        "EUR" -> "€"
+                        "GBP" -> "£"
+                        else -> rawSymbol
+                    }
                     SettingsRow(
                         title = "Currency Symbol",
-                        value = preferences["currency_symbol"] ?: "Default",
+                        value = displaySymbol,
                         iconName = "currencysymbol"
                     ) {
                         activeDialogOption = "currency_symbol"
@@ -274,7 +304,16 @@ fun SettingsScreen(
                         value = "Coming Soon",
                         iconName = "passcode"
                     ) {
-                        android.widget.Toast.makeText(context, "Passcode feature is coming soon!", android.widget.Toast.LENGTH_SHORT).show()
+                        android.widget.Toast.makeText(context, "Passcode feature is coming soon! Please use Biometric Lock instead.", android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+                item {
+                    SettingsRow(
+                        title = "Biometric Lock",
+                        value = preferences["biometric_lock"] ?: "Off",
+                        iconName = "passcode"
+                    ) {
+                        activeDialogOption = "biometric_lock"
                     }
                 }
 
@@ -308,6 +347,7 @@ fun SettingsScreen(
             options = optionsList,
             selectedValue = preferences[activeDialogOption!!] ?: when(activeDialogOption) {
                 "show_notes" -> "On"
+                "financial_tutor" -> "On"
                 "currency_symbol" -> "Default"
                 "summary_font" -> "Chalk"
                 "category_icon_style" -> "Filled"
